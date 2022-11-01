@@ -42,7 +42,7 @@ contract Suppleirs is ERC721URIStorage {
      * @param removedBy The address who removed the suppleir
      * @param name Name of the suppleir
      */
-    event ProfileDeleted(uint256 indexed tokenId, address removedBy, string name);
+    event SuppleirRemoved(uint256 indexed tokenId, address removedBy, string name);
 
     constructor() ERC721("Suppleir's profile", "SPF") {}
 
@@ -55,7 +55,7 @@ contract Suppleirs is ERC721URIStorage {
      * @param categories_ The categorier of material the suppleir can provide
      * @param tokenURI_ The Metadata that contains all suppleir valid in licenses
      */
-    function register(
+    function registerSuppleir(
         string memory name_,
         string memory addr_,
         string memory owner_,
@@ -91,7 +91,7 @@ contract Suppleirs is ERC721URIStorage {
      * @param tokenURI_ The Metadata that contains all suppleir valid in licenses
      */
 
-    function updateProfile(
+    function updateSuppleirProfile(
         uint256 tokenId_,
         string memory name_,
         string memory addr_,
@@ -99,9 +99,12 @@ contract Suppleirs is ERC721URIStorage {
         string memory categories_,
         string memory tokenURI_
     ) external {
-        require(tokenId_ > 0 && tokenId_ <= tokenId, "Suppleir Profile not found");
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Suppleir not found");
         address owner = ownerOf(tokenId_);
-        require(msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender));
+        require(
+            msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender),
+            "Not allowed for you!"
+        );
         SuppleirProfile storage _suppleir = suppleirs[tokenId_];
         _suppleir.addr = addr_;
         _suppleir.name = name_;
@@ -125,7 +128,7 @@ contract Suppleirs is ERC721URIStorage {
         _burn(tokenId_);
         SuppleirProfile storage _suppleir = suppleirs[tokenId_];
 
-        emit ProfileDeleted(tokenId_, msg.sender, _suppleir.name);
+        emit SuppleirRemoved(tokenId_, msg.sender, _suppleir.name);
 
         delete _suppleir.name;
         delete _suppleir.addr;
