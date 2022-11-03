@@ -136,4 +136,18 @@ contract Suppleirs is ERC721URIStorage {
         delete _suppleir.owner;
         delete _suppleir.registeredAt;
     }
+
+    /**
+     * @notice Used to get suppleir information
+     * @param tokenId_ the Id of a particular suppleir
+     */
+    function getSuppleirProfile(uint256 tokenId_) external view returns (SuppleirProfile memory, string memory) {
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Suppleir not found");
+
+        SuppleirProfile memory suppleir_ = suppleirs[tokenId_];
+
+        string memory tokenURI_ = tokenURI(tokenId_);
+
+        return (suppleir_, tokenURI_);
+    }
 }

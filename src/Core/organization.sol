@@ -4,6 +4,11 @@ pragma solidity 0.8.7;
 
 import "../../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
+/**
+ * @notice Is a contract that stores all organization informations
+ * @title Organization contract
+ * @author Addis Belete
+ */
 contract Organizations is ERC721URIStorage {
     struct Organization {
         string name; // name of organization or company
@@ -115,5 +120,15 @@ contract Organizations is ERC721URIStorage {
         delete organization_.location;
         delete organization_.registeredAt;
         delete organization_.updatedAt;
+    }
+
+    function getOrganizationProfile(uint256 tokenId_) external view returns (Organization memory, string memory) {
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Organization not found");
+
+        Organization memory organization_ = organizations[tokenId_];
+
+        string memory tokenURI_ = tokenURI(tokenId_);
+
+        return (organization_, tokenURI_);
     }
 }
