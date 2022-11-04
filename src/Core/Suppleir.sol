@@ -124,7 +124,10 @@ contract Suppleirs is ERC721URIStorage {
     function removeSuppleir(uint256 tokenId_) external {
         require(tokenId_ > 0 && tokenId_ <= tokenId, "Suppleir Profile not found");
         address owner = ownerOf(tokenId_);
-        require(msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender));
+        require(
+            msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender),
+            "Not allowed for you!"
+        );
         _burn(tokenId_);
         SuppleirProfile storage _suppleir = suppleirs[tokenId_];
 
