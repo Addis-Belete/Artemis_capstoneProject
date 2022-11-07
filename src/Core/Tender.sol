@@ -180,10 +180,13 @@ contract Tenders {
         emit BidStatusChanged(tenderId_, suppleirId_, status_);
     }
     /**
-     * @notice Verifies the proof
+     * @notice Verifies the proof and set the winner;
      */
 
-    function verifyProof() external {}
+    function verifyProof(uint256 tenderId_, uint256 suppleirId_) external view {
+        Bid memory bid_ = bidding[tenderId_][suppleirId_];
+        require(bid_.status == Status(2), "bid declined");
+    }
 
     function getWinner(uint256 tenderId_) external returns (uint256, uint256) {}
 
