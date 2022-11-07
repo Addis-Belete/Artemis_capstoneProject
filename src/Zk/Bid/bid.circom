@@ -1,6 +1,6 @@
 pragma circom 2.0.0;
 
-include "../lib/circomlib/circuits/mimcsponge.circom";
+include "../../../lib/circomlib/circuits/mimcsponge.circom";
 template bid() {
 
 	signal input tenderId_;
@@ -17,4 +17,5 @@ template bid() {
 
 }
 
-component main {public [tenderId_, suppleirId_]} = bid();
+component main {public [tenderId_, suppleirId_, bidValue]} = bid();
+//lib/circomlib/circuits/mimcsponge.circom
