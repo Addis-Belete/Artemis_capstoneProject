@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.7;
 
-import "../../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "openzeppelin-contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 /**
  * @notice Is a contract that stores all organization informations
@@ -43,7 +43,7 @@ contract Organizations is ERC721URIStorage {
      */
     event OrganizationRemoved(uint256 indexed tokenId, string name);
 
-    constructor() ERC721("Suppleir's profile", "SPF") {}
+    constructor() ERC721("Organization's profile", "OPF") {}
 
     /**
      * @notice Register's new organization or company
@@ -82,7 +82,7 @@ contract Organizations is ERC721URIStorage {
         string memory location_,
         string memory tokenURI_
     ) external {
-        require(tokenId_ > 0 && tokenId_ <= tokenId, "Organization not found");
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Not Registered");
         address owner = ownerOf(tokenId_);
         require(
             msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender),
@@ -104,7 +104,7 @@ contract Organizations is ERC721URIStorage {
      * @param tokenId_ The Id of token that represent's the organization or company
      */
     function removeOrganization(uint256 tokenId_) external {
-        require(tokenId_ > 0 && tokenId_ <= tokenId, "Organization not found");
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Not Registered");
         address owner = ownerOf(tokenId_);
         require(
             msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender),

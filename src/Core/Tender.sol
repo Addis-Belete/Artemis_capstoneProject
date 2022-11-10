@@ -3,12 +3,13 @@
 pragma solidity 0.8.7;
 
 import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC721.sol";
-
+import "../Interfaces/IVerifier.sol";
 /**
  * @notice Is contract that makes org to create tender and
  * @title Tenders contract
  * @author Addis Belete
  */
+
 contract Tenders {
     enum Stages {
         bidding, // is when bidding is possible
@@ -31,11 +32,12 @@ contract Tenders {
         uint256 bidEndTime; // The time where bidding ends
         uint256 verifyingTime; // the duration where bidders verify there proofs
         uint256 winnerId; // The Id of the winner
+        bool isPaused; //Is true if the tender owner paused the tender
     }
     //Suppleir bid information
 
     struct Bid {
-        bytes32 proof;
+        uint256 proof;
         uint256 value;
         Status status;
         bool claimable;
@@ -51,10 +53,11 @@ contract Tenders {
 
     IERC721 Org; // Interface for Organization contract
     IERC721 supp; // Interface for suppleir contract
+    IVerifier verifier;
     mapping(uint256 => Tender) private tenders; // tenderId -> Tender
     mapping(uint256 => mapping(uint256 => Bid)) private bidding; // tenderId -> tokenId -> Bid
     mapping(uint256 => uint256[]) private biddersId; // tenderId -> bidders(suppliers) Id
-    mapping(uint256 => Winner) private winner;
+    mapping(uint256 => Winner) private winner; // tenderId -> Winner
 
     /**
      * @notice Emitted when a new tender created.
@@ -87,9 +90,35 @@ contract Tenders {
      */
     event FundReturned(uint256 indexed tenderId, uint256 indexed suppleirId);
 
-    constructor(address organizationAddress_, address suppleirAddress_) {
+    /**
+     * @notice Emittes when suppleir can verify the bid
+     * @param tenderId Id of a particular tender
+     * @param suppleirId The Id of the suppleir who verifies the bid
+     */
+    event BidVerified(uint256 indexed tenderId, uint256 indexed suppleirId);
+
+    /**
+     * @notice Emitted when tender owner announces the winner
+     * @param tenderId The Id of the tender
+     * @param suppleirId The Id of the suppleir who wins the bid
+     * @param winningValue winning value
+     */
+    event WinnerAnnounced(uint256 indexed tenderId, uint256 indexed suppleirId, uint256 indexed winningValue);
+    /**
+     * @notice Emitted when tender stopped
+     * @param tenderId The Id of the tender
+     */
+    event TenderStopped(uint256 indexed tenderId);
+
+    modifier isTenderAvailable(uint256 tenderId_) {
+        require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
+        _;
+    }
+
+    constructor(address organizationAddress_, address suppleirAddress_, address verifierAddress_) {
         Org = IERC721(organizationAddress_);
         supp = IERC721(suppleirAddress_);
+        verifier = IVerifier(verifierAddress_);
         owner = msg.sender;
     }
     /**
@@ -106,13 +135,7 @@ contract Tenders {
         payable
     {
         require(Org.ownerOf(orgId_) != address(0), "Organization not found");
-
-        require(
-            Org.ownerOf(orgId_) == msg.sender || Org.getApproved(orgId_) == msg.sender
-                || Org.isApprovedForAll(Org.ownerOf(orgId_), msg.sender),
-            "Not allowed for you!"
-        );
-
+        isAllowed_(1, orgId_);
         require(msg.value == 0.5 ether, " 0.5 ether platform fee");
         tenderId++;
         uint256 bidEnd_ = (bidPeriod * 1 days) + block.timestamp;
@@ -124,7 +147,8 @@ contract Tenders {
             bidStartTime: block.timestamp,
             bidEndTime: bidEnd_,
             verifyingTime: verifyingEndDate_,
-            winnerId: 0
+            winnerId: 0,
+            isPaused: false
         });
 
         emit NewTenderCreated(orgId_, tenderId, bidEnd_, verifyingEndDate_);
@@ -137,18 +161,17 @@ contract Tenders {
      * @param tenderId_ The Id of the tender
      * @param proof_ The proof a user can provide
      */
-    function bid(uint256 suppleirId_, uint256 tenderId_, bytes32 proof_) external payable {
-        require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
+    function bid(uint256 suppleirId_, uint256 tenderId_, uint256 proof_)
+        external
+        payable
+        isTenderAvailable(tenderId_)
+    {
         require(supp.ownerOf(suppleirId_) != address(0), "suppleir not found");
-        require(
-            supp.ownerOf(suppleirId_) == msg.sender || supp.getApproved(suppleirId_) == msg.sender
-                || supp.isApprovedForAll(supp.ownerOf(suppleirId_), msg.sender),
-            "Not allowed for you!"
-        );
+        isAllowed_(0, suppleirId_);
         require(msg.value == 0.5 ether, "0.5 ether platform fee");
         Tender memory tender_ = tenders[tenderId_];
         uint256 endDate = tender_.bidEndTime;
-        require(block.timestamp < endDate, "Bidding closed");
+        require(block.timestamp < endDate || !tender_.isPaused, "Bidding closed or paused");
 
         bidding[tenderId][suppleirId_] = Bid({proof: proof_, value: 0, status: Status.pending, claimable: true});
 
@@ -156,6 +179,7 @@ contract Tenders {
 
         emit NewBidAdded(tenderId_, suppleirId_);
     }
+
     /**
      * @notice Changes the status of the bid from pending to approve or decline
      * @dev only called by tender owner
@@ -164,59 +188,135 @@ contract Tenders {
      * @param status_ The Status of the bid to be changed
      */
 
-    function changeStatus(uint256 tenderId_, uint256 suppleirId_, Status status_) external {
-        require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
+    function changeStatus(uint256 tenderId_, uint256 suppleirId_, Status status_)
+        external
+        isTenderAvailable(tenderId_)
+    {
         Tender memory tender_ = tenders[tenderId_];
         uint256 tenderOwner_ = tender_.organizationId;
-
+        isAllowed_(1, tenderOwner_);
         require(
-            Org.ownerOf(tenderOwner_) == msg.sender || Org.getApproved(tenderOwner_) == msg.sender
-                || Org.isApprovedForAll(Org.ownerOf(tenderOwner_), msg.sender),
-            "Not allowed for you!"
+            tender_.bidEndTime < block.timestamp || tender_.stage != Stages.closed, "tender closed or on bidding stage"
         );
-        require(tender_.bidEndTime < block.timestamp || tender_.stage != Stages(2), "tender closed or on bidding stage");
         bidding[tenderId_][suppleirId_].status = status_;
 
         emit BidStatusChanged(tenderId_, suppleirId_, status_);
     }
     /**
      * @notice Verifies the proof and set the winner;
+     * @dev If two bidders bid same amount the one who verified first can win the bid
+     * @param a a
+     * @param b b
+     * @param c c
+     * @param input input
      */
 
-    function verifyProof(uint256 tenderId_, uint256 suppleirId_) external view {
-        Bid memory bid_ = bidding[tenderId_][suppleirId_];
+    function verifyBid(uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c, uint256[4] memory input)
+        external
+    {
+        require(verifier.verifyProof(a, b, c, input), "Proof not valid");
+
+        uint256 tenderId_ = uint256(input[1]);
+        uint256 suppleirId_ = uint256(input[2]);
+        uint256 bidValue_ = uint256(input[3]);
+
+        Bid storage bid_ = bidding[tenderId_][suppleirId_];
+        require(
+            tenders[tenderId_].verifyingTime < block.timestamp && block.timestamp > tenders[tenderId_].bidEndTime,
+            "Verifying period not started || passed "
+        );
+        require(bid_.proof == input[0], "Proof not same");
         require(bid_.status == Status(2), "bid declined");
+
+        bid_.value = bidValue_;
+
+        if (winner[tenderId_].winningValue < bidValue_) {
+            winner[tenderId_] = Winner(suppleirId_, bidValue_);
+        }
+
+        emit BidVerified(tenderId_, suppleirId_);
+    }
+    /**
+     * @notice Used to announce the winner and only called once
+     */
+
+    function announceWinner(uint256 tenderId_) external isTenderAvailable(tenderId_) {
+        Tender storage tender_ = tenders[tenderId_];
+        require(!tender_.isPaused, "Tender paused");
+        uint256 tenderOwner_ = tender_.organizationId;
+        isAllowed_(1, tenderOwner_);
+        require(block.timestamp > tender_.verifyingTime, "Verifying period not ended");
+        require(tender_.stage != Stages.closed, "Winner already announced");
+        tender_.stage = Stages.closed;
+
+        Winner memory winner_ = winner[tenderId_];
+        bidding[tenderId_][winner_.suppleirId].claimable = false;
+
+        emit WinnerAnnounced(tenderId_, winner_.suppleirId, winner_.winningValue);
     }
 
-    function getWinner(uint256 tenderId_) external returns (uint256, uint256) {}
+    /**
+     * @notice Pause the tender for certain period of time
+     */
+    function pauseTender(uint256 tenderId_) external isTenderAvailable(tenderId_) {
+        Tender storage tender_ = tenders[tenderId_];
+        require(!tender_.isPaused, "Tender paused");
+        uint256 tenderOwner_ = tender_.organizationId;
+        isAllowed_(1, tenderOwner_);
+        tender_.isPaused = true;
 
+        emit TenderStopped(tenderId_);
+    }
+
+    /**
+     * @notice used to restart the paused tender
+     */
+    function restartTender(uint256 tenderId_, uint256 bidPeriod, uint256 verifyingPeriod)
+        external
+        isTenderAvailable(tenderId_)
+    {
+        Tender storage tender_ = tenders[tenderId_];
+        require(tender_.isPaused, "Tender not paused");
+        uint256 tenderOwner_ = tender_.organizationId;
+        isAllowed_(1, tenderOwner_);
+
+        uint256 bidEnd_ = (bidPeriod * 1 days) + block.timestamp;
+        uint256 verifyingEndDate_ = bidEnd_ + verifyingPeriod * 1 days;
+
+        tender_.isPaused = false;
+        tender_.bidEndTime = bidEnd_;
+        tender_.verifyingTime = verifyingEndDate_;
+    }
     /**
      * @notice Used to return funds of user who not won the bid for a particular tenders
      * @param tenderId_ The Id of the tender
      * @param suppleirId_ The Id of the suppleir
      */
-    function returnFunds(uint256 tenderId_, uint256 suppleirId_) external returns (bool success) {
-        require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
-        require(supp.ownerOf(suppleirId_) != address(0), "suppleir not found");
-        require(
-            supp.ownerOf(suppleirId_) == msg.sender || supp.getApproved(suppleirId_) == msg.sender
-                || supp.isApprovedForAll(supp.ownerOf(suppleirId_), msg.sender),
-            "Not allowed for you!"
-        );
 
+    function returnFunds(uint256 tenderId_, uint256 suppleirId_) external isTenderAvailable(tenderId_) {
+        require(supp.ownerOf(suppleirId_) != address(0), "suppleir not found");
+        isAllowed_(0, suppleirId_); // check if the msg sender is a supplier or have allowance to claim a funds
         Tender memory tender_ = tenders[tenderId_];
 
         require(tender_.stage == Stages(2), "Tender not closed");
         Bid storage bid_ = bidding[tenderId_][suppleirId_];
 
-        require(bid_.proof != bytes32(0x0), "Bid not found");
-        require(bid_.claimable, "Winner or already fund returned");
+        // require(bid_.proof != bytes32(0x0), "Bid not found");
+        require(!bid_.claimable, "Winner or already fund returned");
 
         bid_.claimable = false;
-        (success,) = msg.sender.call{value: 0.05 ether}("");
+        (bool success,) = msg.sender.call{value: 0.05 ether}("");
         require(success, "fund return failed");
 
         emit FundReturned(tenderId_, suppleirId_);
+    }
+    /**
+     * @notice Used to get the winner for a particular tender
+     */
+
+    function getWinner(uint256 tenderId_) external view isTenderAvailable(tenderId_) returns (Winner memory) {
+        require(tenders[tenderId_].stage == Stages.closed, "Winner not announced");
+        return winner[tenderId_];
     }
     /**
      * @notice Used to get the bidders Id for a particular tender
@@ -225,5 +325,26 @@ contract Tenders {
 
     function getListOfbidders(uint256 tenderId_) external view returns (uint256[] memory) {
         return biddersId[tenderId_];
+    }
+
+    /**
+     * @notice 0 for to check for suppleir and 1 for organization
+     */
+    function isAllowed_(uint8 type_, uint256 Id_) private view {
+        require(type_ == 0 || type_ == 1);
+        if (type_ == 0) {
+            require(
+                supp.ownerOf(Id_) == msg.sender || supp.getApproved(Id_) == msg.sender
+                    || supp.isApprovedForAll(supp.ownerOf(Id_), msg.sender),
+                "Not allowed for you!"
+            );
+        }
+        if (type_ == 1) {
+            require(
+                Org.ownerOf(Id_) == msg.sender || Org.getApproved(Id_) == msg.sender
+                    || Org.isApprovedForAll(Org.ownerOf(Id_), msg.sender),
+                "Not allowed for you!"
+            );
+        }
     }
 }
