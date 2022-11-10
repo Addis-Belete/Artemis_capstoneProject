@@ -9,6 +9,7 @@ contract OrganizationTest is Test {
 
     event NewOrganizatoinRegistered(uint256 indexed tokenId, address registeredBy, string name);
     event OrganizationProfileUpdated(uint256 indexed tokenId, address updatedBy, string name);
+    event OrganizationRemoved(uint256 indexed tokenId, string name);
 
     function setUp() public {
         organizations = new Organizations();
@@ -82,6 +83,26 @@ contract OrganizationTest is Test {
         vm.startPrank(address(20));
         organizations.registerOrganization("Awash Bank", "Addis Ababa", "www.ipfs.com");
 
+        vm.expectEmit(true, false, false, false);
+        emit OrganizationRemoved(1, "Awash Bank");
         organizations.removeOrganization(1);
+    }
+
+    function testFailRemoveOrganization() public {
+        vm.startPrank(address(20));
+        organizations.registerOrganization("Awash Bank", "Addis Ababa", "www.ipfs.com");
+
+        vm.stopPrank();
+        vm.startPrank(address(30));
+        organizations.removeOrganization(1);
+        vm.expectRevert("Not allowed for you!");
+    }
+
+    function testFailRemoveOrganization1() public {
+        vm.startPrank(address(20));
+        organizations.registerOrganization("Awash Bank", "Addis Ababa", "www.ipfs.com");
+
+        organizations.removeOrganization(2);
+        vm.expectRevert("Not Registered");
     }
 }

@@ -99,7 +99,7 @@ contract Suppleirs is ERC721URIStorage {
         string memory categories_,
         string memory tokenURI_
     ) external {
-        require(tokenId_ > 0 && tokenId_ <= tokenId, "Suppleir not found");
+        require(tokenId_ > 0 && tokenId_ <= tokenId, "Not Registered");
         address owner = ownerOf(tokenId_);
         require(
             msg.sender == owner || getApproved(tokenId_) == msg.sender || isApprovedForAll(owner, msg.sender),
