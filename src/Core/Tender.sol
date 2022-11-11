@@ -222,7 +222,7 @@ contract Tenders {
 
         Bid storage bid_ = bidding[tenderId_][suppleirId_];
         require(
-            tenders[tenderId_].verifyingTime < block.timestamp && block.timestamp > tenders[tenderId_].bidEndTime,
+            tenders[tenderId_].verifyingTime > block.timestamp && block.timestamp > tenders[tenderId_].bidEndTime,
             "Verifying period not started || passed "
         );
 
@@ -231,16 +231,19 @@ contract Tenders {
 
         bid_.value = bidValue_;
 
-        if (winner[tenderId_].winningValue < bidValue_) {
+        if (winner[tenderId_].winningValue == 0) {
+            winner[tenderId_] = Winner(suppleirId_, bidValue_);
+        } else if (winner[tenderId_].winningValue > 0 && winner[tenderId_].winningValue > bidValue_) {
             winner[tenderId_] = Winner(suppleirId_, bidValue_);
         }
 
         emit BidVerified(tenderId_, suppleirId_);
     }
+
     /**
      * @notice Used to announce the winner and only called once
+     * @param tenderId_ The Id of the tender
      */
-
     function announceWinner(uint256 tenderId_) external isTenderAvailable(tenderId_) {
         Tender storage tender_ = tenders[tenderId_];
         require(!tender_.isPaused, "Tender paused");

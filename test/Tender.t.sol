@@ -20,6 +20,7 @@ contract TestTender is Test {
     event NewBidAdded(uint256 indexed tenderId, uint256 indexed suppleirId);
     event BidStatusChanged(uint256 indexed tenderId, uint256 indexed suppleirId, Tenders.Status status);
     event BidVerified(uint256 indexed tenderId, uint256 indexed suppleirId);
+    event WinnerAnnounced(uint256 indexed tenderId, uint256 indexed suppleirId, uint256 indexed winningValue);
 
     function setUp() public {
         supp = new Suppleirs();
@@ -193,8 +194,6 @@ contract TestTender is Test {
         /**
          * Verifying started
          */
-        uint256 skip1 = 604802;
-        skip(skip1);
 
         uint256[2] memory a = [
             0x1fffbc4865cc11c63997348d724bbcba6ed0f125e3ca5ed242418dab912ce628,
@@ -230,6 +229,75 @@ contract TestTender is Test {
         assertEq(bid.proof, 0x168c1d608e56211024837c5e5a8296d386255f49e0c51250eb32e321fc734826);
         assertEq(bid.value, 200000);
         assertEq(bid.claimable, true);
+        vm.stopPrank();
+    }
+
+    function testFailVerifyBid() public {
+        createOrg();
+        createSupp();
+        startHoax(address(30));
+        tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
+        vm.stopPrank();
+        startHoax(address(10));
+        tender.bid{value: 0.5 ether}(1, 1, 0x168c1d608e56211024837c5e5a8296d386255f49e0c51250eb32e321fc734826);
+        vm.stopPrank();
+        startHoax(address(30));
+        uint256 skip_ = 432002;
+        skip(skip_);
+        tender.approveOrDeclineBid(1, 1, Tenders.Status.approved);
+        vm.stopPrank();
+        startHoax(address(10));
+        /**
+         * Verifying started
+         */
+
+        uint256[2] memory a = [
+            0x1fffbc4865cc11c63997348d724bbcba6ed0f125e3ca5ed242418dab912ce628,
+            0x2c4844c608d8c9e47e70946a81c167db7ef209d704b1e81677f257bfbf3213bc
+        ];
+        uint256[2][2] memory b = [
+            [
+                0x29b4926bf991400805fb95030844a3c56d22df6f2a559debb68e1826453cef2b,
+                0x078d311c95f1e55b468031df80a8f8299b5d0323a7628cf39a927a0d90e60bae
+            ],
+            [
+                0x2c6d73faf0831295eb7c803e3978ab4f09410bfaf79b13f7115a68bd1715e342,
+                0x1847801f1cfce3718d32b0a2f5a3b3e52d878e9b3839a863a5a43dafda7c94c8
+            ]
+        ];
+        uint256[2] memory c = [
+            0x029bb6c2d992b572ecee3060b2465a5f99df4b6495e2a4b564fdd3f2d46e6e51,
+            0x15f00ca4bf304833418c74a0954167d9a00d0e0a5192d1211d436b38a0bceaec
+        ];
+
+        uint256[4] memory input = [
+            0x168c1d608e56211024837c5e5a8296d386255f49e0c51250eb32e321fc734826,
+            0x0000000000000000000000000000000000000000000000000000000000000002,
+            0x0000000000000000000000000000000000000000000000000000000000000001,
+            0x0000000000000000000000000000000000000000000000000000000000030d40
+        ];
+
+        tender.verifyBid(a, b, c, input);
+        vm.expectRevert("Proof not valid");
+        vm.stopPrank();
+    }
+
+    function testAnnounceWinner() public {
+        testVerifyBid();
+        uint256 skip1 = 604802;
+        skip(skip1);
+
+        startHoax(address(30));
+
+        vm.expectEmit(true, true, true, false);
+        emit WinnerAnnounced(1, 1, 200000);
+        tender.announceWinner(1);
+        vm.stopPrank();
+        startHoax(address(10));
+        Tenders.Bid memory bid = tender.getYourBid(1, 1);
+        assertEq(bid.proof, 0x168c1d608e56211024837c5e5a8296d386255f49e0c51250eb32e321fc734826);
+        assertEq(bid.value, 200000);
+        assertEq(bid.claimable, false);
     }
 
     function createOrg() internal {
