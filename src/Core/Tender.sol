@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.7;
 
-import "../../lib/openzeppelin-contracts/contracts/interfaces/IERC721.sol";
+import "openzeppelin-contracts/interfaces/IERC721.sol";
 import "../Interfaces/IVerifier.sol";
+import "forge-std/console.sol";
 /**
  * @notice Is contract that makes org to create tender and
  * @title Tenders contract
@@ -165,12 +166,11 @@ contract Tenders {
         payable
         isTenderAvailable(tenderId_)
     {
-        require(supp.ownerOf(suppleirId_) != address(0), "suppleir not found");
         isAllowed_(0, suppleirId_);
         require(msg.value == 0.5 ether, "0.5 ether platform fee");
         Tender memory tender_ = tenders[tenderId_];
         uint256 endDate = tender_.bidEndTime;
-        require(block.timestamp < endDate || !tender_.isPaused, "Bidding closed or paused");
+        require(block.timestamp < endDate || tender_.isPaused, "Bidding closed or paused");
 
         bidding[tenderId][suppleirId_] = Bid({proof: proof_, value: 0, status: Status.pending, claimable: true});
 
@@ -187,16 +187,17 @@ contract Tenders {
      * @param status_ The Status of the bid to be changed
      */
 
-    function changeStatus(uint256 tenderId_, uint256 suppleirId_, Status status_)
+    function approveOrDeclineBid(uint256 tenderId_, uint256 suppleirId_, Status status_)
         external
         isTenderAvailable(tenderId_)
     {
         Tender memory tender_ = tenders[tenderId_];
         uint256 tenderOwner_ = tender_.organizationId;
         isAllowed_(1, tenderOwner_);
-        require(
-            tender_.bidEndTime < block.timestamp || tender_.stage != Stages.closed, "tender closed or on bidding stage"
-        );
+        console.log(tender_.bidEndTime, "bid end time");
+        console.log(block.timestamp > tender_.bidEndTime);
+        require(tender_.bidEndTime < block.timestamp, "bidding stage");
+        require(tender_.stage != Stages.closed, "bidding closed");
         bidding[tenderId_][suppleirId_].status = status_;
 
         emit BidStatusChanged(tenderId_, suppleirId_, status_);
@@ -224,8 +225,9 @@ contract Tenders {
             tenders[tenderId_].verifyingTime < block.timestamp && block.timestamp > tenders[tenderId_].bidEndTime,
             "Verifying period not started || passed "
         );
+
         require(bid_.proof == input[0], "Proof not same");
-        require(bid_.status == Status(2), "bid declined");
+        require(bid_.status == Status(1), "bid declined");
 
         bid_.value = bidValue_;
 
@@ -333,10 +335,20 @@ contract Tenders {
     function getTender(uint256 tenderId_) external view returns (Tender memory) {
         return tenders[tenderId_];
     }
+
+    /**
+     * @notice Used to get the bid of suppleir for particular tender
+     * @param tenderId_ The Id of the tender
+     * @param suppleirId_ The Id of the suppleir
+     */
+    function getYourBid(uint256 tenderId_, uint256 suppleirId_) external view returns (Bid memory) {
+        isAllowed_(0, suppleirId_);
+        return bidding[tenderId_][suppleirId_];
+    }
+
     /**
      * @notice 0 for to check for suppleir and 1 for organization
      */
-
     function isAllowed_(uint8 type_, uint256 Id_) private view {
         require(type_ == 0 || type_ == 1);
         if (type_ == 0) {
