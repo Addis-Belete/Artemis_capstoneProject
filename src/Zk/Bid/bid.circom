@@ -22,4 +22,6 @@ component main {public [tenderId_, suppleirId_, bidValue]} = bid();
 
 // hash of the bid
 // add secret value
-// open tender close tender
+// open tender close tender 
+// generate hash 
+

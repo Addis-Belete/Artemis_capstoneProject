@@ -134,7 +134,6 @@ contract Tenders {
         external
         payable
     {
-        require(Org.ownerOf(orgId_) != address(0), "Organization not found");
         isAllowed_(1, orgId_);
         require(msg.value == 0.5 ether, " 0.5 ether platform fee");
         tenderId++;
@@ -328,8 +327,16 @@ contract Tenders {
     }
 
     /**
+     * @notice Used to get tender
+     * @param tenderId_ The Id of a particular tender
+     */
+    function getTender(uint256 tenderId_) external view returns (Tender memory) {
+        return tenders[tenderId_];
+    }
+    /**
      * @notice 0 for to check for suppleir and 1 for organization
      */
+
     function isAllowed_(uint8 type_, uint256 Id_) private view {
         require(type_ == 0 || type_ == 1);
         if (type_ == 0) {
