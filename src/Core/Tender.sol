@@ -246,7 +246,7 @@ contract Tenders {
      */
     function announceWinner(uint256 tenderId_) external isTenderAvailable(tenderId_) {
         Tender storage tender_ = tenders[tenderId_];
-        require(!tender_.isPaused, "Tender paused");
+        require(tender_.isPaused, "Tender paused");
         uint256 tenderOwner_ = tender_.organizationId;
         isAllowed_(1, tenderOwner_);
         require(block.timestamp > tender_.verifyingTime, "Verifying period not ended");
@@ -298,7 +298,6 @@ contract Tenders {
      */
 
     function returnFunds(uint256 tenderId_, uint256 suppleirId_) external isTenderAvailable(tenderId_) {
-        require(supp.ownerOf(suppleirId_) != address(0), "suppleir not found");
         isAllowed_(0, suppleirId_); // check if the msg sender is a supplier or have allowance to claim a funds
         Tender memory tender_ = tenders[tenderId_];
 
@@ -306,7 +305,7 @@ contract Tenders {
         Bid storage bid_ = bidding[tenderId_][suppleirId_];
 
         // require(bid_.proof != bytes32(0x0), "Bid not found");
-        require(!bid_.claimable, "Winner or already fund returned");
+        require(bid_.claimable, "Winner or already fund returned");
 
         bid_.claimable = false;
         (bool success,) = msg.sender.call{value: 0.05 ether}("");
