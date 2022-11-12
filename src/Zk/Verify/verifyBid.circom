@@ -19,7 +19,7 @@ template bid() {
 
 }
 
-component main {public [tenderId_, suppleirId_]} = bid();
+component main {public [tenderId_, suppleirId_, bidValue]} = bid();
 //lib/circomlib/circuits/mimcsponge.circom
 
 // hash of the bid
