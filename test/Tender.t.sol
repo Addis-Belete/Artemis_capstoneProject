@@ -21,6 +21,7 @@ contract TestTender is Test {
     event BidStatusChanged(uint256 indexed tenderId, uint256 indexed suppleirId, Tenders.Status status);
     event BidVerified(uint256 indexed tenderId, uint256 indexed suppleirId);
     event WinnerAnnounced(uint256 indexed tenderId, uint256 indexed suppleirId, uint256 indexed winningValue);
+    event TenderStatus(uint256 indexed tenderId, bool isPaused);
 
     function setUp() public {
         supp = new Suppleirs();
@@ -32,7 +33,6 @@ contract TestTender is Test {
     function testCreateTender() public {
         createOrg();
         hoax(address(30));
-
         vm.expectEmit(true, true, true, false);
         emit NewTenderCreated(1, 1, 432001, 604801);
         tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
@@ -309,6 +309,72 @@ contract TestTender is Test {
         tender.announceWinner(1);
         vm.expectRevert("Not allowed for you!");
         vm.stopPrank();
+    }
+
+    function testFailAnnounceWinner1() public {
+        testVerifyBid();
+        uint256 skip1 = 604802;
+        skip(skip1);
+
+        startHoax(address(30));
+        tender.announceWinner(1);
+        tender.announceWinner(1);
+        vm.expectRevert("Winner already announceds");
+        vm.stopPrank();
+    }
+
+    function testPauseTender() public {
+        createOrg();
+        hoax(address(30));
+        tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
+        vm.stopPrank();
+        vm.startPrank(address(30));
+        vm.expectEmit(true, false, false, false);
+        emit TenderStatus(1, true);
+        tender.pauseTender(1);
+        Tenders.Tender memory tender_ = tender.getTender(1);
+        assertEq(tender_.isPaused, true);
+        vm.stopPrank();
+    }
+
+    function testFailPauseTender() public {
+        createOrg();
+        hoax(address(30));
+        tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
+        vm.stopPrank();
+        vm.startPrank(address(10));
+        tender.pauseTender(1);
+        vm.expectRevert("Not allowed for you!");
+        vm.stopPrank();
+    }
+
+    function testRestartTender() public {
+        testPauseTender();
+        vm.startPrank(address(30));
+        uint256 time = 5 days;
+        skip(time);
+        vm.expectEmit(true, false, false, false);
+
+        emit TenderStatus(1, false);
+        tender.restartTender(1, 5, 2);
+        Tenders.Tender memory tender_ = tender.getTender(1);
+        assertEq(tender_.isPaused, false);
+    }
+
+    function testFailRestartTender() public {
+        createOrg();
+        hoax(address(30));
+        tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
+        vm.stopPrank();
+        vm.startPrank(address(30));
+        uint256 time = 5 days;
+        skip(time);
+        tender.restartTender(1, 5, 2);
+        vm.expectRevert("Tender not paused");
+    }
+
+    function testReturnFunds() public {
+        //Todo
     }
 
     function createOrg() internal {

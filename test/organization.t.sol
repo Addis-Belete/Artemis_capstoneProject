@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "forge-std/Test.sol";
 import "../src/Core/organization.sol";
 
-contract OrganizationTest is Test {
+contract TestOrganization is Test {
     Organizations organizations;
 
     event NewOrganizatoinRegistered(uint256 indexed tokenId, address registeredBy, string name);

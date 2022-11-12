@@ -106,10 +106,11 @@ contract Tenders {
      */
     event WinnerAnnounced(uint256 indexed tenderId, uint256 indexed suppleirId, uint256 indexed winningValue);
     /**
-     * @notice Emitted when tender stopped
+     * @notice Emitted when paused or restarted
      * @param tenderId The Id of the tender
+     * @param isPaused true if paused else false
      */
-    event TenderStopped(uint256 indexed tenderId);
+    event TenderStatus(uint256 indexed tenderId, bool isPaused);
 
     modifier isTenderAvailable(uint256 tenderId_) {
         require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
@@ -170,8 +171,8 @@ contract Tenders {
         require(msg.value == 0.5 ether, "0.5 ether platform fee");
         Tender memory tender_ = tenders[tenderId_];
         uint256 endDate = tender_.bidEndTime;
-        require(block.timestamp < endDate || tender_.isPaused, "Bidding closed or paused");
-
+        require(block.timestamp < endDate, "Bidding period finished");
+        require(!tender_.isPaused, "Tender paused!");
         bidding[tenderId][suppleirId_] = Bid({proof: proof_, value: 0, status: Status.pending, claimable: true});
 
         biddersId[tenderId].push(suppleirId_);
@@ -269,7 +270,7 @@ contract Tenders {
         isAllowed_(1, tenderOwner_);
         tender_.isPaused = true;
 
-        emit TenderStopped(tenderId_);
+        emit TenderStatus(tenderId_, true);
     }
 
     /**
@@ -290,6 +291,7 @@ contract Tenders {
         tender_.isPaused = false;
         tender_.bidEndTime = bidEnd_;
         tender_.verifyingTime = verifyingEndDate_;
+        emit TenderStatus(tenderId_, false);
     }
     /**
      * @notice Used to return funds of user who not won the bid for a particular tenders

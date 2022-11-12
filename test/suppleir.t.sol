@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import "forge-std/Test.sol";
 import "../src/Core/Suppleir.sol";
 
-contract SuppleirTest is Test {
+contract TestSuppleir is Test {
     Suppleirs suppleirs;
 
     event NewSuppleirRegistered(uint256 indexed tokenId, address owner, string name);
