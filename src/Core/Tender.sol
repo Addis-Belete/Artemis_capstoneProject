@@ -246,7 +246,7 @@ contract Tenders {
      */
     function announceWinner(uint256 tenderId_) external isTenderAvailable(tenderId_) {
         Tender storage tender_ = tenders[tenderId_];
-        require(tender_.isPaused, "Tender paused");
+        require(!tender_.isPaused, "Tender paused");
         uint256 tenderOwner_ = tender_.organizationId;
         isAllowed_(1, tenderOwner_);
         require(block.timestamp > tender_.verifyingTime, "Verifying period not ended");

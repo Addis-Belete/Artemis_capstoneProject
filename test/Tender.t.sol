@@ -300,6 +300,17 @@ contract TestTender is Test {
         assertEq(bid.claimable, false);
     }
 
+    function testFailAnnounceWinner() public {
+        testVerifyBid();
+        uint256 skip1 = 604802;
+        skip(skip1);
+
+        startHoax(address(20));
+        tender.announceWinner(1);
+        vm.expectRevert("Not allowed for you!");
+        vm.stopPrank();
+    }
+
     function createOrg() internal {
         // Organization one
         vm.startPrank(address(30));
