@@ -1,0 +1,30 @@
+.list {
+display: flex;
+flex-wrap: wrap;
+margin-top: 50px;
+}
+
+.card{
+
+width: 300px;
+margin: 20px;
+box-shadow:2px 2px 2px 2px white;
+margin-left: 20px;
+background-color: white;
+}
+
+.button {
+width: 100%;
+padding: 5px;
+}
+.ul {
+list-style: none;
+display: contents;
+
+
+}
+.li {
+padding: 5px;
+color: goldenrod;
+
+}

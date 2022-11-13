@@ -17,14 +17,14 @@ export default function Home() {
 	const connect = async () => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum)
 		await provider.send("eth_requestAccounts", []);
-		const signer = provider.getSigner([4])
+		const signer = provider.getSigner()
 		return signer
 	}
 
 	const registerOrg = async (type, name_, address_, uri_) => {
-		const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
-		const signer = provider.getSigner("0xa0ee7a142d267c1f36714e4a8f75612f20a79720")
+		const signer = provider.getSigner()
 		if (type == 0) {
 			const orgAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
 			const orgABI = [
@@ -33,7 +33,7 @@ export default function Home() {
 			]
 			const OrgContract = new ethers.Contract(orgAddress, orgABI, provider);
 			const orgSinger = OrgContract.connect(signer);
-			await orgSinger.registerOrganization(name_, address_, uri_).then((res) => {
+			await orgSinger.registerOrganization(name_, address_, uri_).then(() => {
 				setData({
 					"name_": "",
 					"address": "",
@@ -48,8 +48,33 @@ export default function Home() {
 
 			})
 		}
+		if (type == 1) {
+			const suppAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+			const suppABI = [
+				"function registerSuppleir(string memory name_, string memory addr_, string memory owner_, string memory categories_, string memory tokenURI_) external",
+				"event NewSuppleirRegistered(uint256 indexed tokenId, address owner, string name)"
+			]
+
+			const suppContract = new ethers.Contract(suppAddress, suppABI, provider);
+			const suppSinger = suppContract.connect(signer);
+			await suppSinger.registerSuppleir(name_, address_, name_, name_, uri_).then(() => {
+				setData({
+					"name_": "",
+					"address": "",
+					"uri": "",
+					"type": 0
+				})
+
+			}).catch(err => console.log(err))
+
+			suppContract.on("NewSuppleirRegistered", (tokenId, owner, name, event) => {
+				console.log(`${tokenId} is registered by ${owner} and name is ${name}`)
+
+			})
+
+		}
 	}
-	console.log(data.type);
+
 	return (
 		<div>
 			<div className={styles.header_}>
@@ -68,7 +93,7 @@ export default function Home() {
 				<label htmlFor="name"> Name:</label>
 				<input className={styles.input} type="text" name="name_" value={data.name_} onChange={handleOnChange} /><br /><br />
 				<label htmlFor="address">Address:</label>
-				<input className={styles.input} type="text" name="address" value={data.address_} onChange={handleOnChange} /><br /><br />
+				<input className={styles.input} type="text" name="address" value={data.address} onChange={handleOnChange} /><br /><br />
 				<label htmlFor="lname">TokenURI:</label>
 				<input className={styles.input} type="text" id="uri" name="uri" value={data.uri} onChange={handleOnChange} /><br /><br />
 				<button className={styles.button} onClick={() => registerOrg(data.type, data.name_, data.address, data.uri)} >Register</button>
@@ -77,3 +102,11 @@ export default function Home() {
 		</div>
 	)
 }
+
+
+/*
+		TODO
+1. Add pop or some message when organization successfully created or failed
+2. Optimize code
+
+*/
