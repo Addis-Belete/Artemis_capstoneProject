@@ -5,7 +5,7 @@ template bid() {
 
 	signal input tenderId_;
 	signal input suppleirId_;
-	signal input secretKey
+	signal input secretKey;
 	signal input bidValue;
 	signal output hashed;
 
