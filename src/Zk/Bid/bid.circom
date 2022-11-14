@@ -5,7 +5,7 @@ template bid() {
 
 	signal input tenderId_;
 	signal input suppleirId_;
-	signal input secretKey
+	signal input secretKey;
 	signal input bidValue;
 	signal output hashed;
 
@@ -19,7 +19,7 @@ template bid() {
 
 }
 
-component main {public [tenderId_, suppleirId_]} = bid();
+component main  = bid();
 //lib/circomlib/circuits/mimcsponge.circom
 
 // hash of the bid

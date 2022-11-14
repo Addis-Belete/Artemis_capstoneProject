@@ -340,11 +340,20 @@ contract Tenders {
         return tenders[tenderId_];
     }
 
+    function getAllTenders() external view returns (Tender[] memory) {
+        Tender[] memory tenders_ = new Tender[](tenderId);
+        for (uint256 i = 1; i <= tenderId; i++) {
+            Tender memory tender_ = tenders[i];
+            tenders_[i - 1] = tender_;
+        }
+        return tenders_;
+    }
     /**
      * @notice Used to get the bid of suppleir for particular tender
      * @param tenderId_ The Id of the tender
      * @param suppleirId_ The Id of the suppleir
      */
+
     function getYourBid(uint256 tenderId_, uint256 suppleirId_) external view returns (Bid memory) {
         isAllowed_(0, suppleirId_);
         return bidding[tenderId_][suppleirId_];

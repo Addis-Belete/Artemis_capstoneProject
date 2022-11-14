@@ -1,6 +1,8 @@
 import styles from "../styles/Home.module.css";
 import { useState } from "react";
-import { ethers } from "ethers"
+import { ethers } from "ethers";
+import orgABI from "../../../out/organization.sol/Organizations.json"
+import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 export default function Home() {
 
 	const [data, setData] = useState({
@@ -26,12 +28,8 @@ export default function Home() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 		if (type == 0) {
-			const orgAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
-			const orgABI = [
-				"function registerOrganization(string memory name_, string memory location_, string memory tokenURI_) external",
-				"event NewOrganizatoinRegistered(uint256 indexed tokenId, address registeredBy, string name)"
-			]
-			const OrgContract = new ethers.Contract(orgAddress, orgABI, provider);
+			const orgAddress = "0x71C95911E9a5D330f4D621842EC243EE1343292e";
+			const OrgContract = new ethers.Contract(orgAddress, orgABI.abi, provider);
 			const orgSinger = OrgContract.connect(signer);
 			await orgSinger.registerOrganization(name_, address_, uri_).then(() => {
 				setData({
@@ -49,13 +47,8 @@ export default function Home() {
 			})
 		}
 		if (type == 1) {
-			const suppAddress = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
-			const suppABI = [
-				"function registerSuppleir(string memory name_, string memory addr_, string memory owner_, string memory categories_, string memory tokenURI_) external",
-				"event NewSuppleirRegistered(uint256 indexed tokenId, address owner, string name)"
-			]
-
-			const suppContract = new ethers.Contract(suppAddress, suppABI, provider);
+			const suppAddress = "0x8464135c8F25Da09e49BC8782676a84730C318bC";
+			const suppContract = new ethers.Contract(suppAddress, suppABI.abi, provider);
 			const suppSinger = suppContract.connect(signer);
 			await suppSinger.registerSuppleir(name_, address_, name_, name_, uri_).then(() => {
 				setData({

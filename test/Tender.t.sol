@@ -377,6 +377,14 @@ contract TestTender is Test {
         //Todo
     }
 
+    function testGetAllTenders() public {
+        createOrg();
+        hoax(address(30));
+
+        tender.createNewTender{value: 0.5 ether}(1, "www.tender1.com", 5, 2);
+        tender.getAllTenders();
+    }
+
     function createOrg() internal {
         // Organization one
         vm.startPrank(address(30));

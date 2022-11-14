@@ -20,19 +20,24 @@ snarkjs powersoftau prepare phase2 pot12_0001.ptau pot12_final.ptau -v
 snarkjs groth16 setup "${circuit}.r1cs" pot12_final.ptau "${circuit}_0000.zkey"
 
 # Contribute to phase2 ceremony
-snarkjs zkey contribute "${circuit}_0000.zkey" "${circuit}_0001.zkey" --name="1st contribution" -v
+snarkjs zkey contribute "${circuit}_0000.zkey" "${circuit}_final.zkey" --name="1st contribution" -v
 
 # export verification key
-snarkjs zkey export verificationkey "${circuit}_0001.zkey" verification_key.json
+snarkjs zkey export verificationkey "${circuit}_final.zkey" verification_key.json
 
 # Generate proof
-snarkjs groth16 prove "${circuit}_0001.zkey" witness.wtns proof.json public.json
+snarkjs groth16 prove "${circuit}_final.zkey" witness.wtns proof.json public.json
 
 # Verify the proof
 snarkjs groth16 verify verification_key.json public.json proof.json
 
-# Generate Solidity code
-snarkjs zkey export solidityverifier "${circuit}_0001.zkey" verifier.sol
+echo "----- Generate Solidity verifier -----"
+# Generate a Solidity verifier that allows verifying proofs on Ethereum blockchain
+snarkjs zkey export solidityverifier ${CIRCUIT}_final.zkey ${CIRCUIT}Verifier.sol
+# Update the solidity version in the Solidity verifier
+sed -i 's/0.6.11;/0.8.7;/g' ${CIRCUIT}Verifier.sol
 
-#generate The call for the solidty
-snarkjs generatecall 
+
+echo "----- Generate and print parameters of call -----"
+# Generate and print parameters of call
+snarkjs generatecall | tee parameters.txt

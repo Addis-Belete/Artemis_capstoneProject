@@ -1,6 +1,7 @@
 import styles from "../styles/Home.module.css";
 import { useState } from "react";
 import { ethers } from "ethers"
+import tenderABI from "../../../out/Tender.sol/Tenders.json"
 export default function postTender() {
 	const [tender, setTender] = useState({
 		"orgId": 0,
@@ -18,12 +19,8 @@ export default function postTender() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 
-		const tenderContractAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F"
-		const tenderABI = [
-			"function createNewTender(uint256 orgId_, string memory tenderURI_, uint256 bidPeriod, uint256 verifyingPeriod) external payable",
-			"event NewTenderCreated(uint256 indexed orgId, uint256 indexed tenderId, uint256 indexed bidEndDate, uint256 verifyingEndDate)"
-		]
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI, provider);
+		const tenderContractAddress = "0x712516e61C8B383dF4A63CFe83d7701Bce54B03e"
+		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 		const value = ethers.utils.parseEther("0.5")
 		await tenderSinger.createNewTender(orgId, tenderURI, bidPeriod, verifyingPeriod, { value: value }).then(() => {
@@ -42,6 +39,7 @@ export default function postTender() {
 		})
 
 	}
+	console.log(tender.orgId);
 	return (
 		<div>
 			<div className={styles.register}>

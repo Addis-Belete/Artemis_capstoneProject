@@ -19,15 +19,15 @@ NULL,
 NULL };
 uint get_main_input_signal_start() {return 2;}
 
-uint get_main_input_signal_no() {return 3;}
+uint get_main_input_signal_no() {return 4;}
 
-uint get_total_signal_no() {return 2659;}
+uint get_total_signal_no() {return 3544;}
 
-uint get_number_of_components() {return 5;}
+uint get_number_of_components() {return 6;}
 
 uint get_size_of_input_hashmap() {return 256;}
 
-uint get_size_of_witness() {return 1984;}
+uint get_size_of_witness() {return 2645;}
 
 uint get_size_of_constants() {return 439;}
 
@@ -1547,10 +1547,10 @@ void MiMCSponge_1_create(uint soffset,uint coffset,Circom_CalcWit* ctx,std::stri
 ctx->componentMemory[coffset].templateId = 1;
 ctx->componentMemory[coffset].templateName = "MiMCSponge";
 ctx->componentMemory[coffset].signalStart = soffset;
-ctx->componentMemory[coffset].inputCounter = 4;
+ctx->componentMemory[coffset].inputCounter = 5;
 ctx->componentMemory[coffset].componentName = componentName;
 ctx->componentMemory[coffset].idFather = componentFather;
-ctx->componentMemory[coffset].subcomponents = new uint[3];
+ctx->componentMemory[coffset].subcomponents = new uint[4];
 }
 
 void MiMCSponge_1_run(uint ctx_index,Circom_CalcWit* ctx){
@@ -1571,7 +1571,7 @@ uint sub_component_aux;
 PFrElement aux_dest = &lvar[0];
 // load src
 // end load src
-Fr_copy(aux_dest,&circuitConstants[7]);
+Fr_copy(aux_dest,&circuitConstants[9]);
 }
 {
 PFrElement aux_dest = &lvar[1];
@@ -1588,9 +1588,9 @@ Fr_copy(aux_dest,&circuitConstants[0]);
 {
 uint aux_create = 0;
 int aux_cmp_num = 0+ctx_index+1;
-uint csoffset = mySignalStart+5;
-uint aux_dimensions[1] = {3};
-for (uint i = 0; i < 3; i++) {
+uint csoffset = mySignalStart+6;
+uint aux_dimensions[1] = {4};
+for (uint i = 0; i < 4; i++) {
 std::string new_cmp_name = "S"+ctx->generate_position_array(aux_dimensions, 1, i);
 MiMCFeistel_0_create(csoffset,aux_cmp_num,ctx,new_cmp_name,myId);
 mySubcomponents[aux_create+i] = aux_cmp_num;
@@ -1610,7 +1610,7 @@ PFrElement aux_dest = &lvar[3];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[1]);
 }
-Fr_lt(&expaux[0],&lvar[3],&circuitConstants[7]); // line circom 16
+Fr_lt(&expaux[0],&lvar[3],&circuitConstants[9]); // line circom 16
 while(Fr_isTrue(&expaux[0])){
 {
 uint cmp_index_ref = ((1 * Fr_toInt(&lvar[3])) + 0);
@@ -1618,7 +1618,7 @@ uint cmp_index_ref = ((1 * Fr_toInt(&lvar[3])) + 0);
 PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 4];
 // load src
 // end load src
-Fr_copy(aux_dest,&signalValues[mySignalStart + 4]);
+Fr_copy(aux_dest,&signalValues[mySignalStart + 5]);
 }
 // run sub component if needed
 if(!(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1)){
@@ -1696,13 +1696,13 @@ Fr_add(&expaux[0],&lvar[3],&circuitConstants[3]); // line circom 16
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
-Fr_lt(&expaux[0],&lvar[3],&circuitConstants[7]); // line circom 16
+Fr_lt(&expaux[0],&lvar[3],&circuitConstants[9]); // line circom 16
 }
 {
 PFrElement aux_dest = &signalValues[mySignalStart + 0];
 // load src
 // end load src
-Fr_copy(aux_dest,&ctx->signalValues[ctx->componentMemory[mySubcomponents[2]].signalStart + 0]);
+Fr_copy(aux_dest,&ctx->signalValues[ctx->componentMemory[mySubcomponents[3]].signalStart + 0]);
 }
 {
 PFrElement aux_dest = &lvar[3];
@@ -1710,7 +1710,7 @@ PFrElement aux_dest = &lvar[3];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[1]);
 }
-for (uint i = 0; i < 3; i++){
+for (uint i = 0; i < 4; i++){
 uint index_subc = ctx->componentMemory[ctx_index].subcomponents[i];
 release_memory_component(ctx,index_subc);
 }
@@ -1720,7 +1720,7 @@ void bid_2_create(uint soffset,uint coffset,Circom_CalcWit* ctx,std::string comp
 ctx->componentMemory[coffset].templateId = 2;
 ctx->componentMemory[coffset].templateName = "bid";
 ctx->componentMemory[coffset].signalStart = soffset;
-ctx->componentMemory[coffset].inputCounter = 3;
+ctx->componentMemory[coffset].inputCounter = 4;
 ctx->componentMemory[coffset].componentName = componentName;
 ctx->componentMemory[coffset].idFather = componentFather;
 ctx->componentMemory[coffset].subcomponents = new uint[1];
@@ -1743,13 +1743,13 @@ uint sub_component_aux;
 {
 uint aux_create = 0;
 int aux_cmp_num = 0+ctx_index+1;
-uint csoffset = mySignalStart+4;
+uint csoffset = mySignalStart+5;
 for (uint i = 0; i < 1; i++) {
 std::string new_cmp_name = "mimc";
 MiMCSponge_1_create(csoffset,aux_cmp_num,ctx,new_cmp_name,myId);
 mySubcomponents[aux_create+i] = aux_cmp_num;
-csoffset += 2654 ;
-aux_cmp_num += 4;
+csoffset += 3538 ;
+aux_cmp_num += 5;
 }
 }
 {
@@ -1789,6 +1789,17 @@ assert(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1);
 uint cmp_index_ref = 0;
 {
 PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 4];
+// load src
+// end load src
+Fr_copy(aux_dest,&signalValues[mySignalStart + 4]);
+}
+// no need to run sub component
+assert(ctx->componentMemory[mySubcomponents[cmp_index_ref]].inputCounter -= 1);
+}
+{
+uint cmp_index_ref = 0;
+{
+PFrElement aux_dest = &ctx->signalValues[ctx->componentMemory[mySubcomponents[cmp_index_ref]].signalStart + 5];
 // load src
 // end load src
 Fr_copy(aux_dest,&circuitConstants[1]);
