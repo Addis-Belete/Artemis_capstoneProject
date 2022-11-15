@@ -1,13 +1,15 @@
 import styles from "../styles/Home.module.css";
 import { useState } from "react";
 import { ethers } from "ethers"
- 54
+import Header from "./Components/header";
+
+import tenderABI from "../../../out/Tender.sol/Tenders.json";
 export default function postTender() {
 	const [tender, setTender] = useState({
-		"orgId": 0,
+		"orgId": "",
 		"tenderURI": "",
-		"bidPeriod": 0,
-		"verifyingPeriod": 0
+		"bidPeriod": "",
+		"verifyingPeriod": ""
 	})
 
 	const handleOnChange = event => {
@@ -19,16 +21,16 @@ export default function postTender() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 
-		const tenderContractAddress = "0x712516e61C8B383dF4A63CFe83d7701Bce54B03e"
+		const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
 		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 		const value = ethers.utils.parseEther("0.5")
 		await tenderSinger.createNewTender(orgId, tenderURI, bidPeriod, verifyingPeriod, { value: value }).then(() => {
 			setTender({
-				"orgId": 0,
+				"orgId": "",
 				"tenderURI": "",
-				"bidPeriod": 0,
-				"verifyingPeriod": 0
+				"bidPeriod": "",
+				"verifyingPeriod": ""
 			})
 
 		}).catch(err => console.log(err))
@@ -39,9 +41,10 @@ export default function postTender() {
 		})
 
 	}
-	console.log(tender.orgId);
+
 	return (
 		<div>
+			<Header />
 			<div className={styles.register}>
 				<h2>Create new Tender</h2>
 				<label htmlFor="orgId"> Organization ID</label>

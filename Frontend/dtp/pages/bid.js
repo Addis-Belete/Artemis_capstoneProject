@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import tenderABI from "../../../out/Tender.sol/Tenders.json"
 import { BidCalldata } from "../zkproofs/Bid/snarkjsBid";
 import { VerifyCalldata } from "../zkproofs/Verify/snarkjsVerify"
+import Header from "./Components/header";
 export default function bid() {
 	const [bids, setBids] = useState({
 		"tenderId": "",
@@ -20,11 +21,11 @@ export default function bid() {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContractAddress = "0x712516e61C8B383dF4A63CFe83d7701Bce54B03e"
+		const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
 		const proof = await BidCalldata(tenderId, suppleirId, secretKey, bidValue);
 		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
-		await tenderSigner.bid(tenderId, suppleirId, proof.Input[0], { value: ethers.utils.parseEther("0.5") }).then(() => {
+		await tenderSigner.bid(suppleirId, tenderId, proof.Input[0], { value: ethers.utils.parseEther("0.5") }).then(() => {
 			setBids({
 				"tenderId": "",
 				"suppleirId": "",
@@ -45,7 +46,7 @@ export default function bid() {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContractAddress = "0x712516e61C8B383dF4A63CFe83d7701Bce54B03e"
+		const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
 		const proof = await VerifyCalldata(tenderId, suppleirId, secretKey, bidValue);
 		console.log(proof)
 		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
@@ -59,26 +60,29 @@ export default function bid() {
 
 	}
 	return (
-		<div className={styles.register}>
+		<>
+			<Header />
+			<div className={styles.register}>
 
-			<label htmlFor="tenderId"> tender ID</label>
-			<input className={styles.input} type="text" value={bids.tenderId} name="tenderId" onChange={handleOnChange} />
-			<br />
-			<br />
-			<label htmlFor="suppleirId">Suppleir ID</label>
-			<input className={styles.input} type="text" value={bids.suppleirId} name="suppleirId" onChange={handleOnChange} />
-			<br />
-			<br />
-			<label htmlFor="secretKey">Secret Key</label>
-			<input className={styles.input} type="text" value={bids.secretKey} name="secretKey" onChange={handleOnChange} />
-			<br />
-			<br />
-			<label htmlFor="bidValue">Bid Value</label>
-			<input className={styles.input} type="text" value={bids.bidValue} name="bidValue" onChange={handleOnChange} />
-			<br />
-			<br />
-			<button className={styles.button} onClick={() => verifyOffer(bids.tenderId, bids.suppleirId, bids.secretKey, bids.bidValue)}>Bid</button>
-		</div>
+				<label htmlFor="tenderId"> tender ID</label>
+				<input className={styles.input} type="text" value={bids.tenderId} name="tenderId" onChange={handleOnChange} />
+				<br />
+				<br />
+				<label htmlFor="suppleirId">Suppleir ID</label>
+				<input className={styles.input} type="text" value={bids.suppleirId} name="suppleirId" onChange={handleOnChange} />
+				<br />
+				<br />
+				<label htmlFor="secretKey">Secret Key</label>
+				<input className={styles.input} type="text" value={bids.secretKey} name="secretKey" onChange={handleOnChange} />
+				<br />
+				<br />
+				<label htmlFor="bidValue">Bid Value</label>
+				<input className={styles.input} type="text" value={bids.bidValue} name="bidValue" onChange={handleOnChange} />
+				<br />
+				<br />
+				<button className={styles.button} onClick={() => giveOffer(bids.tenderId, bids.suppleirId, bids.secretKey, bids.bidValue)}>Bid</button>
+			</div>
+		</>
 	)
 
 }
