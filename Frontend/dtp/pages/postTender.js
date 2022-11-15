@@ -1,7 +1,7 @@
 import styles from "../styles/Home.module.css";
 import { useState } from "react";
 import { ethers } from "ethers"
-import tenderABI from "../../../out/Tender.sol/Tenders.json"
+ 54
 export default function postTender() {
 	const [tender, setTender] = useState({
 		"orgId": 0,
