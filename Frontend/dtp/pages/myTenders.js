@@ -4,7 +4,7 @@ import orgABI from "../../../out/organization.sol/Organizations.json"
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 import { useState, useEffect } from "react";
 import styles from "../styles/myTenders.module.css";
-import { VerifyCalldata } from "../zkproofs/Verify/snarkjsVerify"
+
 import Header from "./Components/header";
 export default function listTenders() {
 	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
