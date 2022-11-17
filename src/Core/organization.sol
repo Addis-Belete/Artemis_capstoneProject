@@ -19,6 +19,7 @@ contract Organizations is ERC721URIStorage {
 
     uint256 tokenId;
     mapping(uint256 => Organization) private organizations; // tokenId -> Organization
+    mapping(address => uint256) private Ids;
     /**
      * @notice Emitted when new organization or company registered
      * @param tokenId The unique Id of the token that represents the organization or company
@@ -65,6 +66,7 @@ contract Organizations is ERC721URIStorage {
         _mint(msg.sender, tokenId);
 
         _setTokenURI(tokenId, tokenURI_);
+        Ids[msg.sender] = tokenId;
 
         emit NewOrganizatoinRegistered(tokenId, msg.sender, name_);
     }
@@ -115,7 +117,7 @@ contract Organizations is ERC721URIStorage {
         Organization storage organization_ = organizations[tokenId_];
 
         emit OrganizationRemoved(tokenId, organization_.name);
-
+        delete Ids[msg.sender];
         delete organization_.name;
         delete organization_.location;
         delete organization_.registeredAt;
@@ -130,5 +132,11 @@ contract Organizations is ERC721URIStorage {
         string memory tokenURI_ = tokenURI(tokenId_);
 
         return (organization_, tokenURI_);
+    }
+
+    function getYourOrganiationId() external view returns (uint256) {
+        uint256 id = Ids[msg.sender];
+        require(id > 0, "This address not registered");
+        return id;
     }
 }

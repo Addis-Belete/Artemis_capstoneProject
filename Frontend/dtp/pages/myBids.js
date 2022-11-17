@@ -32,21 +32,21 @@ export default function myBid() {
 
 
 		const myBids = await tenderSigner.getAllYourBids(suppId_.toString());
-		/*
-				myBids.map(async (val, ind) => {
-					let bidObj = {
-						tenderId: "",
-						tenderURI: "",
-					}
-					const tender = await tenderContract.getTender(val)
-					const tenderURI = tender.tenderURI;
-		
-					bidObj.tenderId = val.toString();
-					bidObj.tenderURI = tenderURI
-					bidsArray[ind] = bidObj;
-				})
-		*/
-		setMyBid(myBids);
+
+		myBids.map(async (val, ind) => {
+			let bidObj = {
+				tenderId: "",
+				tenderURI: "",
+			}
+			const tender = await tenderContract.getTender(val)
+			const tenderURI = tender.tenderURI;
+
+			bidObj.tenderId = val.toString();
+			bidObj.tenderURI = tenderURI
+			bidsArray[ind] = bidObj;
+		})
+
+		setMyBid(bidsArray);
 
 	}
 

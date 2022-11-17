@@ -59,13 +59,15 @@ contract Tenders {
     mapping(uint256 => mapping(uint256 => Bid)) private bidding; // tenderId -> tokenId -> Bid
     mapping(uint256 => uint256[]) private biddersId; // tenderId -> bidders(suppliers) Id
     mapping(uint256 => Winner) private winner; // tenderId -> Winner
-
+    mapping(uint256 => uint256[]) private suppBid; // mapping that stores Ids of all tenders that suppleir can bids
+    mapping(uint256 => mapping(address => bool)) private isBidded;
     /**
      * @notice Emitted when a new tender created.
      * @param orgId The Id of the organization who created the tender
      * @param tenderId The Id of the created tender
      * @param bidEndDate The Date where bidding ends
      */
+
     event NewTenderCreated(
         uint256 indexed orgId, uint256 indexed tenderId, uint256 indexed bidEndDate, uint256 verifyingEndDate
     );
@@ -168,14 +170,18 @@ contract Tenders {
         isTenderAvailable(tenderId_)
     {
         isAllowed_(0, suppleirId_);
+        address suppleirOwner = supp.ownerOf(suppleirId_);
+        require(!isBidded[tenderId_][suppleirOwner], "You already bidded on this tender");
         require(msg.value == 0.5 ether, "0.5 ether platform fee");
         Tender memory tender_ = tenders[tenderId_];
         uint256 endDate = tender_.bidEndTime;
         require(block.timestamp < endDate, "Bidding period finished");
         require(!tender_.isPaused, "Tender paused!");
+        isBidded[tenderId_][suppleirOwner] = true;
         bidding[tenderId][suppleirId_] = Bid({proof: proof_, value: 0, status: Status.pending, claimable: true});
 
         biddersId[tenderId].push(suppleirId_);
+        suppBid[suppleirId_].push(tenderId);
 
         emit NewBidAdded(tenderId_, suppleirId_);
     }
@@ -348,6 +354,7 @@ contract Tenders {
         }
         return tenders_;
     }
+
     /**
      * @notice Used to get the bid of suppleir for particular tender
      * @param tenderId_ The Id of the tender
@@ -357,6 +364,10 @@ contract Tenders {
     function getYourBid(uint256 tenderId_, uint256 suppleirId_) external view returns (Bid memory) {
         isAllowed_(0, suppleirId_);
         return bidding[tenderId_][suppleirId_];
+    }
+
+    function getAllYourBids(uint256 suppleirId_) external view returns (uint256[] memory) {
+        return suppBid[suppleirId_];
     }
 
     /**

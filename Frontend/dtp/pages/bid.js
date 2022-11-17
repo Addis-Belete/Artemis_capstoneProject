@@ -41,24 +41,8 @@ export default function bid() {
 
 
 	}
-	/*Needs to be fixed*/
-	const verifyOffer = async (tenderId, suppleirId, secretKey, bidValue) => {
-		const provider = new ethers.providers.Web3Provider(window.ethereum);
-		await provider.send("eth_requestAccounts", []);
-		const signer = provider.getSigner()
-		const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
-		const proof = await VerifyCalldata(tenderId, suppleirId, secretKey, bidValue);
-		console.log(proof)
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
-		const tenderSigner = tenderContract.connect(signer);
-		await tenderSigner.verifyBid(proof.a, proof.b, proof.c, proof.Input).then(() => {
-			tenderContract.on("bidVerified", (tenderId, suppleirId) => {
-				console.log(`Suppleir of Id${suppleirId} verified a bid on a tender Id of ${tenderId}`)
+	
 
-			})
-		}).catch(err => console.log(err));
-
-	}
 	return (
 		<>
 			<Header />

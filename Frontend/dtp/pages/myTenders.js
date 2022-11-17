@@ -84,13 +84,8 @@ export default function listTenders() {
 	}
 	const handleClick = (e) => {
 		e.preventDefault()
-		if (!disp) {
-			setDisp(true)
-			getBidders(2)
-		}
-		else {
-			setDisp(false);
-		}
+		setDisp(!disp)
+		getBidders(2)
 	}
 
 	return (
@@ -109,9 +104,9 @@ export default function listTenders() {
 								<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
 								<button className={styles.button} onClick={handleClick}>{disp ? "Hide Bids" : "Show Bids"}</button>
 							</ul>
-							{bidders.map((bidId, index) => {
+							{disp && bidders.map((bidId, index) => {
 								return (
-									<ul key={index} className={styles.ul1} style={{ display: disp ? "flex" : "none" }}>
+									<ul key={index} className={styles.ul1} >
 										<li className={styles.li} >{`Suppleir Id: ${(bidId).toString()} `}</li><br></br>
 										<li className={styles.li}>{`Suppleir URI: www.awash.com`}</li><br></br>
 										<button className={styles.button} onClick={() => approveOrDeclineBid(2, bidId.toString(), 1)}>Approve</button>

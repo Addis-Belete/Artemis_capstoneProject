@@ -33,9 +33,9 @@ snarkjs groth16 verify verification_key.json public.json proof.json
 
 echo "----- Generate Solidity verifier -----"
 # Generate a Solidity verifier that allows verifying proofs on Ethereum blockchain
-snarkjs zkey export solidityverifier ${CIRCUIT}_final.zkey ${CIRCUIT}Verifier.sol
+snarkjs zkey export solidityverifier verifyBid_final.zkey "${CIRCUIT}verifier.sol" -v
 # Update the solidity version in the Solidity verifier
-sed -i 's/0.6.11;/0.8.7;/g' ${CIRCUIT}Verifier.sol
+sed -i 's/0.6.11;/0.8.7;/g' "${CIRCUIT}verifier.sol"
 
 
 echo "----- Generate and print parameters of call -----"

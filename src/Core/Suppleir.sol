@@ -21,13 +21,14 @@ contract Suppleirs is ERC721URIStorage {
     uint256 tokenId;
 
     mapping(uint256 => SuppleirProfile) private suppleirs; // tokenId -> SuppleirProfile
-
+    mapping(address => uint256) private Ids;
     /**
      * @notice Is Emitted when a new suppleir is registered
      * @param tokenId The unique ID of the supplier
      * @param owner The address of owner who registered the suppleir
      * @param name Name of the suppleir
      */
+
     event NewSuppleirRegistered(uint256 indexed tokenId, address owner, string name);
     /**
      * @notice Is Emitted when a existing profile updated
@@ -77,6 +78,7 @@ contract Suppleirs is ERC721URIStorage {
         _mint(msg.sender, tokenId);
 
         _setTokenURI(tokenId, tokenURI_);
+        Ids[msg.sender] = tokenId;
 
         emit NewSuppleirRegistered(tokenId, msg.sender, name_);
     }
@@ -129,6 +131,7 @@ contract Suppleirs is ERC721URIStorage {
             "Not allowed for you!"
         );
         _burn(tokenId_);
+        Ids[owner] = 0;
         SuppleirProfile storage _suppleir = suppleirs[tokenId_];
 
         emit SuppleirRemoved(tokenId_, msg.sender, _suppleir.name);
@@ -152,5 +155,11 @@ contract Suppleirs is ERC721URIStorage {
         string memory tokenURI_ = tokenURI(tokenId_);
 
         return (suppleir_, tokenURI_);
+    }
+
+    function getYourId() external view returns (uint256) {
+        uint256 id = Ids[msg.sender];
+        require(id > 0, "This address not registered");
+        return id;
     }
 }
