@@ -5,6 +5,8 @@ import orgABI from "../../../out/organization.sol/Organizations.json"
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 import Header from "./Components/header";
 export default function Home() {
+	const [success, setSuccess] = useState('');
+	const [error, setError] = useState("")
 
 	const [data, setData] = useState({
 		"name_": "",
@@ -28,6 +30,11 @@ export default function Home() {
 			const OrgContract = new ethers.Contract(orgAddress, orgABI.abi, provider);
 			const orgSinger = OrgContract.connect(signer);
 			await orgSinger.registerOrganization(name_, address_, uri_).then(() => {
+				OrgContract.on("NewOrganizatoinRegistered", (tokenId, registeredBy, name, event) => {
+					const message = `New organization registered With Id of ${tokenId}`
+					setSuccess(message);
+
+				})
 				setData({
 					"name_": "",
 					"address": "",
@@ -35,18 +42,20 @@ export default function Home() {
 					"type": 0
 				})
 
-			}).catch(err => console.log(err))
 
-			OrgContract.on("NewOrganizatoinRegistered", (tokenId, registeredBy, name, event) => {
-				console.log(`${tokenId} is registered by ${registeredBy} and name is ${name}`)
+			}).catch((err) => setError("Registaration Failed"))
 
-			})
 		}
 		if (type == 1) {
 			const suppAddress = "0xbCF26943C0197d2eE0E5D05c716Be60cc2761508";
 			const suppContract = new ethers.Contract(suppAddress, suppABI.abi, provider);
 			const suppSinger = suppContract.connect(signer);
 			await suppSinger.registerSuppleir(name_, address_, name_, name_, uri_).then(() => {
+				suppContract.on("NewSuppleirRegistered", (tokenId, owner, name, event) => {
+					const message = `New Suppleir Registerd with ID  of ${tokenId}`
+					setSuccess(message)
+
+				})
 				setData({
 					"name_": "",
 					"address": "",
@@ -54,12 +63,10 @@ export default function Home() {
 					"type": 0
 				})
 
-			}).catch(err => console.log(err))
 
-			suppContract.on("NewSuppleirRegistered", (tokenId, owner, name, event) => {
-				console.log(`${tokenId} is registered by ${owner} and name is ${name}`)
+			}).catch(() => setError("Registaration Failed"))
 
-			})
+
 
 		}
 	}
@@ -68,12 +75,17 @@ export default function Home() {
 		<div>
 			<Header />
 			<div className={styles.register}>
+				{success ?
+					<span className={styles.success}> {success} </span> :
+					<span className={styles.error}>{error} </span>
+				}
 				<div className={styles.org}>
 					<h2>Register as</h2>
 					<select className={styles.select} name="type" onChange={handleOnChange}>
 						<option value={0}>Orginization</option>
 						<option value={1}>Suppleir</option>
 					</select>
+
 				</div>
 
 				<label htmlFor="name"> Name:</label>
@@ -85,6 +97,7 @@ export default function Home() {
 				<button className={styles.button} onClick={() => registerOrg(data.type, data.name_, data.address, data.uri)} >Register</button>
 
 			</div>
+
 		</div>
 	)
 }

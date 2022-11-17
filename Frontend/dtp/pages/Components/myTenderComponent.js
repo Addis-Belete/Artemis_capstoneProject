@@ -9,6 +9,8 @@ export default function myTenderComponent({ tender }) {
 
 	const [bidders, setBidders] = useState([]);
 	const [disp, setDisp] = useState(false);
+	const [success, setSuccess] = useState('');
+	const [error, setError] = useState('');
 	const getBidders = async (tenderId) => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
@@ -40,6 +42,23 @@ export default function myTenderComponent({ tender }) {
 		}).catch(err => console.log(err))
 
 	}
+
+	const announceWinner = async (tenderId) => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.announceWinner(tenderId).then(() => {
+			tenderContract.on("WinnerAnnounced", (tenderId, suppleirId, winningValue) => {
+				const message = `Suppleir of Id ${suppleirId} won tender of Id ${tenderId} with ${winningValue} price!!`
+				setSuccess(message);
+
+			}).catch(() => setError("Transaction failed"))
+
+		})
+
+	}
 	return (
 
 		<div >
@@ -47,7 +66,7 @@ export default function myTenderComponent({ tender }) {
 				<li className={styles.li} >{`OrganizationId: ${(tender.organizationId).toString()}`}</li><br></br>
 				<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
 				<button className={styles.button} onClick={handleClick}>{disp ? "Hide Bids" : "Show Bids"}</button>
-				<button className={styles.button}>Announce Winner</button>
+				<button className={styles.button} onClick={() => announceWinner(tender.organizationId)}>Announce Winner</button>
 			</ul>
 			{disp && bidders.map((bidId, index) => {
 				return (
@@ -60,7 +79,6 @@ export default function myTenderComponent({ tender }) {
 				)
 
 			})}
-
 
 		</div>
 	)

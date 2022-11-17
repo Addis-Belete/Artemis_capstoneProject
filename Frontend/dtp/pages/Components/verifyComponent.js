@@ -7,6 +7,7 @@ export default function VerifyComponent({ bid, suppId }) {
 	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
 
 	const [disp, setDisp] = useState(false);
+	const [winner, setWinner] = useState(false);
 	const [verified, setVerified] = useState({
 		"secretKey": "",
 		"bidValue": "",
@@ -39,7 +40,36 @@ export default function VerifyComponent({ bid, suppId }) {
 		}).catch(err => console.log(err));
 
 	}
+	const checkIfCliamable = async () => {
 
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.getYourBid(bid, suppId).then((res) => {
+			setWinner(res.claimable)
+		})
+	}
+	const claimFund = async (tenderId, suppleirId) => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.returnFunds(tenderId, suppleirId).then(() => {
+			tenderContract.on("FundReturned", (tenderId, suppleirId) => {
+				console.log(`Fund returned for supplier of Id ${suppleirId} for tender Id of ${tenderId}`)
+
+			}).catch(err => console.log(err))
+
+		})
+
+	}
+
+	useEffect(() => {
+		checkIfCliamable()
+	}, []);
 	return (
 
 		<div >
@@ -47,7 +77,8 @@ export default function VerifyComponent({ bid, suppId }) {
 				<li>{`tenderId : ${bid}`}</li>
 				<li>{`tender URI : ${bid.tenderURI}`}</li>
 				<button className={styles.button} onClick={handleClick} >Verify</button>
-				<button className={styles.button}>ClaimFund</button>
+				{winner == true ?
+					<button className={styles.button} onClick={() => claimFund(bid, suppId)}>Claim Fund</button> : <button className={styles.button}>Your Winner</button>}
 			</ul>
 			{disp &&
 				<div className={styles.div} >

@@ -5,6 +5,8 @@ import Header from "./Components/header";
 
 import tenderABI from "../../../out/Tender.sol/Tenders.json";
 export default function postTender() {
+	const [success, setSuccess] = useState('');
+	const [error, setError] = useState("")
 	const [tender, setTender] = useState({
 		"orgId": "",
 		"tenderURI": "",
@@ -26,6 +28,11 @@ export default function postTender() {
 		const tenderSinger = tenderContract.connect(signer);
 		const value = ethers.utils.parseEther("0.5")
 		await tenderSinger.createNewTender(orgId, tenderURI, bidPeriod, verifyingPeriod, { value: value }).then(() => {
+			tenderContract.on("NewTenderCreated", (orgId, tenderId, bidEndDate, verifyingEndDate, event) => {
+				const message = `New tender posted with Id of ${tenderId}!`
+				setSuccess(message)
+
+			})
 			setTender({
 				"orgId": "",
 				"tenderURI": "",
@@ -33,12 +40,7 @@ export default function postTender() {
 				"verifyingPeriod": ""
 			})
 
-		}).catch(err => console.log(err))
-
-		tenderContract.on("NewTenderCreated", (orgId, tenderId, bidEndDate, verifyingEndDate, event) => {
-			console.log(`${orgId} is registered by ${tenderId} and name is ${bidEndDate}`)
-
-		})
+		}).catch(() => setError("Tender post failed!"))
 
 	}
 
@@ -46,6 +48,10 @@ export default function postTender() {
 		<div>
 			<Header />
 			<div className={styles.register}>
+				{success ?
+					<span className={styles.success}> {success} </span> :
+					<span className={styles.error}>{error} </span>
+				}
 				<h2>Create new Tender</h2>
 				<label htmlFor="orgId"> Organization ID</label>
 				<input className={styles.input} type="text" name="orgId" value={tender.orgId} onChange={handleOnChange} />

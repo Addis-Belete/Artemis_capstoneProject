@@ -17,6 +17,7 @@
 
 .h2 {
 	margin-left: 20px;
+
 }
 
 .register {
@@ -41,3 +42,16 @@
 .select {
 	padding: 5px;
 }
+
+.success{
+
+
+}
+.error{
+color: red;
+}
+
+.success{
+color: green;
+}
+

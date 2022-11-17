@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Header from "./Components/header";
 import tenderABI from "../../../out/Tender.sol/Tenders.json";
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json";
-
+import styles from "../styles/myBids.module.css"
 import VerifyComponent from "./Components/verifyComponent";
 export default function myBid() {
 	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
@@ -59,7 +59,7 @@ export default function myBid() {
 		<div>
 			<Header />
 
-			{myBids.map((bid, index) => {
+			{myBids.length == 0 ? <p className={styles.p}>Not Bidded To Any Tender Yet!</p> : myBids.map((bid, index) => {
 				return (
 					<VerifyComponent
 						bid={bid.toString()}
