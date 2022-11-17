@@ -1,0 +1,67 @@
+import styles from "../../styles/myBids.module.css"
+import { ethers } from "ethers"
+import { useState, useEffect } from "react";
+import { VerifyCalldata } from "../../zkproofs/Verify/snarkjsVerify";
+import tenderABI from "../../../../out/Tender.sol/Tenders.json"
+export default function VerifyComponent({ bid, suppId }) {
+	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
+
+	const [disp, setDisp] = useState(false);
+	const [verified, setVerified] = useState({
+		"secretKey": "",
+		"bidValue": "",
+
+	})
+	const handleClick = (e) => {
+		e.preventDefault();
+		setDisp(!disp);
+	}
+
+	const handleOnChange = event => {
+		const { name, value } = event.target;
+		setVerified({ ...verified, [name]: value });
+	};
+
+	const verifyOffer = async (tenderId, suppleirId, secretKey, bidValue) => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const proof = await VerifyCalldata(tenderId, suppleirId, secretKey, bidValue);
+		console.log(proof)
+
+		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.verifyBid(proof.a, proof.b, proof.c, proof.Input).then(() => {
+			tenderContract.on("bidVerified", (tenderId, suppleirId) => {
+				console.log(`Suppleir of Id${suppleirId} verified a bid on a tender Id of ${tenderId}`)
+
+			})
+		}).catch(err => console.log(err));
+
+	}
+
+	return (
+
+		<div >
+			<ul className={styles.ul}  >
+				<li>{`tenderId : ${bid}`}</li>
+				<li>{`tender URI : ${bid.tenderURI}`}</li>
+				<button className={styles.button} onClick={handleClick} >Verify</button>
+				<button className={styles.button}>ClaimFund</button>
+			</ul>
+			{disp &&
+				<div className={styles.div} >
+					<label htmlFor="secretKey"> Secret Key</label>
+					<input className={styles.input} type="text" name="secretKey" onChange={handleOnChange} />
+					<br />
+					<br />
+					<label htmlFor="bidValue">Bid Value</label>
+					<input className={styles.input} type="text" name="tenderURI" onChange={handleOnChange} />
+					<br />
+					<br />
+					<button className={styles.button} onClick={() => verifyOffer(bid, suppId, verified.secretKey, verified.bidValue)}>Verify</button>
+				</div>}
+		</div>
+	)
+
+} 

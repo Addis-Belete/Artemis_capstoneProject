@@ -3,6 +3,7 @@ import tenderABI from "../../../out/Tender.sol/Tenders.json";
 import orgABI from "../../../out/organization.sol/Organizations.json"
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 import { useState, useEffect } from "react";
+import MyTenderComponent from "./Components/myTenderComponent";
 import styles from "../styles/myTenders.module.css";
 
 import Header from "./Components/header";
@@ -97,27 +98,8 @@ export default function listTenders() {
 				{myTenders.map((tender, index) => {
 
 					return (
+						<MyTenderComponent key={index} tender={tender} />
 
-						<div key={index}>
-							<ul key={index} className={styles.ul}>
-								<li className={styles.li} >{`OrganizationId: ${(tender.organizationId).toString()}`}</li><br></br>
-								<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
-								<button className={styles.button} onClick={handleClick}>{disp ? "Hide Bids" : "Show Bids"}</button>
-							</ul>
-							{disp && bidders.map((bidId, index) => {
-								return (
-									<ul key={index} className={styles.ul1} >
-										<li className={styles.li} >{`Suppleir Id: ${(bidId).toString()} `}</li><br></br>
-										<li className={styles.li}>{`Suppleir URI: www.awash.com`}</li><br></br>
-										<button className={styles.button} onClick={() => approveOrDeclineBid(2, bidId.toString(), 1)}>Approve</button>
-										<button className={styles.button} onClick={() => approveOrDeclineBid(2, bidId.toString(), 2)}>Decline</button>
-									</ul>
-								)
-
-							})}
-
-
-						</div>
 					)
 				})}
 
