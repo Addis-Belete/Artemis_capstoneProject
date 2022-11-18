@@ -14,6 +14,8 @@ export default function VerifyComponent({ bid, suppId }) {
 		"bidValue": "",
 
 	})
+	const [success, setSuccess] = useState('');
+	const [error, setError] = useState("");
 	const handleClick = (e) => {
 		e.preventDefault();
 		setDisp(!disp);
@@ -29,16 +31,18 @@ export default function VerifyComponent({ bid, suppId }) {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 		const proof = await VerifyCalldata(tenderId, suppleirId, secretKey, bidValue);
-		console.log(proof)
+		console.log(proof.Input[0], "Verify Proof");
 
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.verifyBid(proof.a, proof.b, proof.c, proof.Input).then(() => {
-			tenderContract.on("bidVerified", (tenderId, suppleirId) => {
+			tenderContract.on("BidVerified", (tenderId, suppleirId) => {
 				console.log(`Suppleir of Id${suppleirId} verified a bid on a tender Id of ${tenderId}`)
+				const message = `Suppleir of Id${suppleirId} verified a bid on a tender Id of ${tenderId}`
+				setSuccess(message);
 
 			})
-		}).catch(err => console.log(err));
+		}).catch(() => setError("Verifying Failed!"));
 
 	}
 	const checkIfCliamable = async () => {
@@ -61,19 +65,23 @@ export default function VerifyComponent({ bid, suppId }) {
 		await tenderSigner.returnFunds(tenderId, suppleirId).then(() => {
 			tenderContract.on("FundReturned", (tenderId, suppleirId) => {
 				console.log(`Fund returned for supplier of Id ${suppleirId} for tender Id of ${tenderId}`)
+				const message = `Fund returned for supplier of Id ${suppleirId} for tender Id of ${tenderId}`
+				setSuccess(message);
 
-			}).catch(err => console.log(err))
+			})
 
-		})
+		}).catch(() => setError("Fund Transfer Failed!"))
 
 	}
 
 	useEffect(() => {
 		checkIfCliamable()
 	}, []);
+
 	return (
 
 		<div >
+			{success ? <p className={styles.success}>{success}</p> : <p className={styles.error}>{error}</p>}
 			<ul className={styles.ul}  >
 				<li>{`tenderId : ${bid}`}</li>
 				<li>{`tender URI : ${bid.tenderURI}`}</li>
@@ -88,7 +96,7 @@ export default function VerifyComponent({ bid, suppId }) {
 					<br />
 					<br />
 					<label htmlFor="bidValue">Bid Value</label>
-					<input className={styles.input} type="text" name="tenderURI" onChange={handleOnChange} />
+					<input className={styles.input} type="text" name="bidValue" onChange={handleOnChange} />
 					<br />
 					<br />
 					<button className={styles.button} onClick={() => verifyOffer(bid, suppId, verified.secretKey, verified.bidValue)}>Verify</button>

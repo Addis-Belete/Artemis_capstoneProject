@@ -53,7 +53,7 @@ export default function myBid() {
 	useEffect(() => {
 		getMyBids();
 	}, []);
-
+	console.log(myBids);
 	return (
 		<div>
 			<Header />

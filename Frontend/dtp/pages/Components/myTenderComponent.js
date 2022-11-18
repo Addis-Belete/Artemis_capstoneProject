@@ -19,10 +19,10 @@ export default function myTenderComponent({ tender }) {
 
 	}
 
-	const handleClick = (e) => {
-		e.preventDefault()
+	const handleClick = (tenderId) => {
+
 		setDisp(!disp)
-		getBidders(2)
+		getBidders(tenderId)
 	}
 
 	const approveOrDeclineBid = async (tenderId, suppleirId, status) => {
@@ -44,33 +44,34 @@ export default function myTenderComponent({ tender }) {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.announceWinner(tenderId).then(() => {
 			tenderContract.on("WinnerAnnounced", (tenderId, suppleirId, winningValue) => {
 				const message = `Suppleir of Id ${suppleirId} won tender of Id ${tenderId} with ${winningValue} price!!`
 				setSuccess(message);
 
-			}).catch(() => setError("Transaction failed"))
+			})
 
-		})
+		}).catch(() => setError("Transaction failed"))
 
 	}
+	console.log(bidders, "bidders")
 	return (
 
 		<div >
 			<ul className={styles.ul}>
-				<li className={styles.li} >{`OrganizationId: ${(tender.organizationId).toString()}`}</li><br></br>
+				<li className={styles.li} >{`tenderId: ${(tender.Id).toString()}`}</li><br></br>
 				<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
-				<button className={styles.button} onClick={handleClick}>{disp ? "Hide Bids" : "Show Bids"}</button>
-				<button className={styles.button} onClick={() => announceWinner(tender.organizationId)}>Announce Winner</button>
+				<button className={styles.button} onClick={() => handleClick((tender.Id).toString())}>{disp ? "Hide Bids" : "Show Bids"}</button>
+				{(tender.winnerId).toString() == "0" ? <button className={styles.button} onClick={() => announceWinner(tender.organizationId)}>Announce Winner</button> : <button className={styles.button}>Winner Announced</button>}
 			</ul>
 			{disp && bidders.map((bidId, index) => {
 				return (
 					<ul key={index} className={styles.ul1} >
 						<li className={styles.li} >{`Suppleir Id: ${(bidId).toString()} `}</li><br></br>
 						<li className={styles.li}>{`Suppleir URI: www.awash.com`}</li><br></br>
-						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(2, bidId.toString(), 1)}>Approve</button>
+						<button className={styles.buttonC} onClick={() => approveOrDeclineBid((tender.Id).toString(), bidId.toString(), 1)}>Approve</button>
 						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(2, bidId.toString(), 2)}>Decline</button>
 					</ul>
 				)
@@ -81,3 +82,8 @@ export default function myTenderComponent({ tender }) {
 	)
 
 }
+
+/**
+5184809407160212433912025853841891335343260389862739459919707061648978854415 --> bidproof
+4009655470960686692642744586773687939259979217415386626639754392851468581099
+ */

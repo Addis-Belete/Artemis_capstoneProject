@@ -24,7 +24,7 @@ export default function postTender() {
 		const signer = provider.getSigner()
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
-		const value = ethers.utils.parseEther("0.5")
+		const value = ethers.utils.parseEther("0.0000000005")
 		await tenderSinger.createNewTender(orgId, tenderURI, bidPeriod, verifyingPeriod, { value: value }).then(() => {
 			tenderContract.on("NewTenderCreated", (orgId, tenderId, bidEndDate, verifyingEndDate, event) => {
 				const message = `New tender posted with Id of ${tenderId}!`

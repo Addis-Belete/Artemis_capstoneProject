@@ -54,7 +54,7 @@ export default function listTenders() {
 							<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
 							<li className={styles.li}>{`bidEndDate: ${changeToDate((tender.bidEndTime).toNumber() * 1000)}`}</li><br></br>
 							<li className={styles.li}>{`verifyingEndDate: ${changeToDate((tender.verifyingTime).toNumber() * 1000)}`}</li><br></br>
-							<button className={styles.button} onClick={() => changeToDate((tender.bidEndTime).toNumber() * 1000)}>Bid</button>
+							<button className={styles.button} onClick={handleClick}>Bid</button>
 
 						</ul>
 					</div>

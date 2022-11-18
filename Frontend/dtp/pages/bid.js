@@ -22,9 +22,10 @@ export default function bid() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 		const proof = await BidCalldata(tenderId, suppleirId, secretKey, bidValue);
+		console.log(proof.Input[0], "bid proof");
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
-		await tenderSigner.bid(suppleirId, tenderId, proof.Input[0], { value: ethers.utils.parseEther("0.5") }).then(() => {
+		await tenderSigner.bid(suppleirId, tenderId, proof.Input[0], { value: ethers.utils.parseEther("0.0000000005") }).then(() => {
 			setBids({
 				"tenderId": "",
 				"suppleirId": "",
@@ -41,7 +42,8 @@ export default function bid() {
 
 	}
 
-
+	console.log(bids.tenderId, "Proof tenderId");
+	console.log(bids.suppleirId, "Proof suppleirID")
 	return (
 		<>
 			<Header />
