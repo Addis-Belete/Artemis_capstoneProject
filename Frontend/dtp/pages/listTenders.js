@@ -3,7 +3,6 @@ import tenderABI from "../../../out/Tender.sol/Tenders.json";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/router'
 import styles from "../styles/listTender.module.css";
-import { VerifyCalldata } from "../zkproofs/Verify/snarkjsVerify"
 import Header from "./Components/header";
 import addresses from "../address.json"
 export default function listTenders() {
@@ -15,8 +14,10 @@ export default function listTenders() {
 		const signer = provider.getSigner()
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
-		const tenders = await tenderSinger.getAllTenders();
+
+		const tenders = await tenderSinger.getAllTenders() || [];
 		setTenders(tenders);
+
 	}
 
 	useEffect(() => {
@@ -28,30 +29,39 @@ export default function listTenders() {
 		e.preventDefault();
 		router.push("/bid")
 	}
+	const changeToDate = (timestamp) => {
+		let dateFormat = new Date(timestamp);
+		const date = dateFormat.getDate() +
+			"/" + (dateFormat.getMonth() + 1) +
+			"/" + dateFormat.getFullYear() +
+			" " + dateFormat.getHours() +
+			":" + dateFormat.getMinutes() +
+			":" + dateFormat.getSeconds();
+		return date
+	}
 	return (
 
 		<>
 			<Header />
-			<div className={styles.list}>
-				{tenders.map((tender, index) => {
-					return (
-						<div className={styles.card}>
-							<ul key={index} className={styles.ul}>
+			{tenders.length == 0 ? <p className={styles.p}>Tenders Not Available!</p> : <div className={styles.list}>{tenders.map((tender, index) => {
+				return (
 
-								<li className={styles.li} >{`organizationId: ${(tender.organizationId).toString()}`}</li><br></br>
-								<li className={styles.li} >{`tenderId: ${index + 1}`}</li><br></br>
-								<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
-								<li className={styles.li}>{`bidEndDate: ${tender.bidEndTime}`}</li><br></br>
-								<li className={styles.li}>{`verifyingEndDate: ${tender.verifyingTime}`}</li><br></br>
-								<button className={styles.button} onClick={handleClick}>Bid</button>
+					<div className={styles.card} key={index}>
+						<ul className={styles.ul}>
 
-							</ul>
-						</div>
-					)
-				})}
+							<li className={styles.li} >{`organizationId: ${(tender.organizationId).toString()}`}</li><br></br>
+							<li className={styles.li} >{`tenderId: ${tender.Id}`}</li><br></br>
+							<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
+							<li className={styles.li}>{`bidEndDate: ${changeToDate((tender.bidEndTime).toNumber() * 1000)}`}</li><br></br>
+							<li className={styles.li}>{`verifyingEndDate: ${changeToDate((tender.verifyingTime).toNumber() * 1000)}`}</li><br></br>
+							<button className={styles.button} onClick={() => changeToDate((tender.bidEndTime).toNumber() * 1000)}>Bid</button>
 
-
+						</ul>
+					</div>
+				)
+			})}
 			</div>
+			}
 		</>
 
 	)
@@ -59,9 +69,3 @@ export default function listTenders() {
 }
 
 
-/*
-suppleirAddress: 0xbCF26943C0197d2eE0E5D05c716Be60cc2761508
-organizationAddress: 0x59F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0
-verifierAddress: 0x1275D096B9DBf2347bD2a131Fb6BDaB0B4882487;
-tenderAddress: 0x05Aa229Aec102f78CE0E852A812a388F076Aa555
-*/

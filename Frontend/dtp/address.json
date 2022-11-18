@@ -1,6 +1,6 @@
 {
-"tenderContractAddress": "0x05Aa229Aec102f78CE0E852A812a388F076Aa555",
-"suppleirContractAddress": "0xbCF26943C0197d2eE0E5D05c716Be60cc2761508",
-"OrganizationContractAddress": "0x59F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0",
-"verifierContractAddress": "0x1275D096B9DBf2347bD2a131Fb6BDaB0B4882487"
+"tenderContractAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+"suppleirContractAddress": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+"OrganizationContractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+"verifierContractAddress": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
 }

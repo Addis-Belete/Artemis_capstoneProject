@@ -5,7 +5,7 @@ export default function winnerList() {
 	return (
 		<div>
 			<Header />
-			<div>{addresses.suppleirContractAddress}</div>
+
 		</div>
 	)
 

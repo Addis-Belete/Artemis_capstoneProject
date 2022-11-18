@@ -8,7 +8,6 @@ import styles from "../styles/myTenders.module.css";
 import addresses from "../address.json"
 import Header from "./Components/header";
 export default function listTenders() {
-
 	const [myTenders, setMyTenders] = useState([]);
 
 	const getMyTenders = async () => {
