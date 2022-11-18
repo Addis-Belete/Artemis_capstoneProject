@@ -1,12 +1,9 @@
 import styles from "../../styles/myTenders.module.css"
 import { useState, useEffect } from "react";
 import tenderABI from "../../../../out/Tender.sol/Tenders.json";
-import orgABI from "../../../../out/organization.sol/Organizations.json"
+import addresses from "../../address.json"
 import { ethers } from "ethers"
 export default function myTenderComponent({ tender }) {
-	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
-	const orgContractAddress = "0x59F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
-
 	const [bidders, setBidders] = useState([]);
 	const [disp, setDisp] = useState(false);
 	const [success, setSuccess] = useState('');
@@ -15,7 +12,7 @@ export default function myTenderComponent({ tender }) {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 		const bidders_ = await tenderSinger.getListOfbidders(tenderId);
 		setBidders(bidders_)
@@ -32,7 +29,7 @@ export default function myTenderComponent({ tender }) {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 
 		await tenderSinger.approveOrDeclineBid(tenderId, suppleirId, status).then(() => {

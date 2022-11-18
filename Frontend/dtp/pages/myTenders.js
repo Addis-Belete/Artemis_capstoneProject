@@ -5,12 +5,10 @@ import suppABI from "../../../out/Suppleir.sol/Suppleirs.json";
 import { useState, useEffect } from "react";
 import MyTenderComponent from "./Components/myTenderComponent";
 import styles from "../styles/myTenders.module.css";
-
+import addresses from "../address.json"
 import Header from "./Components/header";
 export default function listTenders() {
-	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
-	const orgContractAddress = "0x59F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
-	const suppleirAddress = "0xbCF26943C0197d2eE0E5D05c716Be60cc2761508";
+
 	const [myTenders, setMyTenders] = useState([]);
 
 	const getMyTenders = async () => {
@@ -18,12 +16,12 @@ export default function listTenders() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner();
 		const tenderContract = new ethers.Contract(
-			tenderContractAddress,
+			addresses.tenderContractAddress,
 			tenderABI.abi,
 			provider
 		);
 		const orgContract = new ethers.Contract(
-			orgContractAddress,
+			addresses.OrganizationContractAddress,
 			orgABI.abi,
 			provider
 		);
@@ -52,7 +50,7 @@ export default function listTenders() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner();
 		const suppContract = new ethers.Contract(
-			suppleirAddress,
+			addresses.suppleirContractAddress,
 			suppABI.abi,
 			provider
 		);

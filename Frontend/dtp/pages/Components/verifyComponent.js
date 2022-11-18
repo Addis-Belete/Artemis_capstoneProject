@@ -3,8 +3,9 @@ import { ethers } from "ethers"
 import { useState, useEffect } from "react";
 import { VerifyCalldata } from "../../zkproofs/Verify/snarkjsVerify";
 import tenderABI from "../../../../out/Tender.sol/Tenders.json"
+import addresses from "../../address.json"
 export default function VerifyComponent({ bid, suppId }) {
-	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
+
 
 	const [disp, setDisp] = useState(false);
 	const [winner, setWinner] = useState(false);
@@ -30,7 +31,7 @@ export default function VerifyComponent({ bid, suppId }) {
 		const proof = await VerifyCalldata(tenderId, suppleirId, secretKey, bidValue);
 		console.log(proof)
 
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.verifyBid(proof.a, proof.b, proof.c, proof.Input).then(() => {
 			tenderContract.on("bidVerified", (tenderId, suppleirId) => {
@@ -45,7 +46,7 @@ export default function VerifyComponent({ bid, suppId }) {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.getYourBid(bid, suppId).then((res) => {
 			setWinner(res.claimable)
@@ -55,7 +56,7 @@ export default function VerifyComponent({ bid, suppId }) {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.returnFunds(tenderId, suppleirId).then(() => {
 			tenderContract.on("FundReturned", (tenderId, suppleirId) => {

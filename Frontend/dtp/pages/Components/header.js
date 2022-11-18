@@ -42,19 +42,20 @@ export default () => {
 					</Link>
 				</li>
 				<li>
-					<Link href="/myTenders" legacyBehavior>
-						<a style={{ color: router.pathname == "/myTenders" ? "#28435c" : "" }}>
-							My Tenders
-						</a>
-					</Link>
-				</li>
-				<li>
 					<Link href="/bid" legacyBehavior>
 						<a style={{ color: router.pathname == "/bid" ? "#28435c" : "" }}>
 							Bid
 						</a>
 					</Link>
 				</li>
+				<li>
+					<Link href="/myTenders" legacyBehavior>
+						<a style={{ color: router.pathname == "/myTenders" ? "#28435c" : "" }}>
+							My Tenders
+						</a>
+					</Link>
+				</li>
+
 				<li>
 					<Link href="/myBids" legacyBehavior>
 						<a style={{ color: router.pathname == "/myBids" ? "#28435c" : "" }}>
@@ -63,8 +64,8 @@ export default () => {
 					</Link>
 				</li>
 				<li>
-					<Link href="/myBids" legacyBehavior>
-						<a style={{ color: router.pathname == "/myBids" ? "#28435c" : "" }}>
+					<Link href="/winner" legacyBehavior>
+						<a style={{ color: router.pathname == "/winner" ? "#28435c" : "" }}>
 							Winners
 						</a>
 					</Link>

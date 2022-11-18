@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import tenderABI from "../../../out/Tender.sol/Tenders.json"
 import { BidCalldata } from "../zkproofs/Bid/snarkjsBid";
-import { VerifyCalldata } from "../zkproofs/Verify/snarkjsVerify"
+import addresses from "../address.json"
 import Header from "./Components/header";
 export default function bid() {
 	const [bids, setBids] = useState({
@@ -21,9 +21,8 @@ export default function bid() {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
 		const proof = await BidCalldata(tenderId, suppleirId, secretKey, bidValue);
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider)
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.bid(suppleirId, tenderId, proof.Input[0], { value: ethers.utils.parseEther("0.5") }).then(() => {
 			setBids({
@@ -41,7 +40,7 @@ export default function bid() {
 
 
 	}
-	
+
 
 	return (
 		<>

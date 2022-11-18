@@ -6,9 +6,8 @@ import tenderABI from "../../../out/Tender.sol/Tenders.json";
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json";
 import styles from "../styles/myBids.module.css"
 import VerifyComponent from "./Components/verifyComponent";
+import addresses from "../address.json"
 export default function myBid() {
-	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
-	const suppleirAddress = "0xbCF26943C0197d2eE0E5D05c716Be60cc2761508";
 	const [myBids, setMyBid] = useState([]);
 	const [suppId, setSuppId] = useState("");
 
@@ -18,12 +17,12 @@ export default function myBid() {
 		const signer = provider.getSigner();
 		let bidsArray = [];
 		const tenderContract = new ethers.Contract(
-			tenderContractAddress,
+			addresses.tenderContractAddress,
 			tenderABI.abi,
 			provider
 		);
 		const suppContract = new ethers.Contract(
-			suppleirAddress,
+			addresses.suppleirContractAddress,
 			suppABI.abi,
 			provider
 		);

@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import orgABI from "../../../out/organization.sol/Organizations.json"
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 import Header from "./Components/header";
+import addresses from "../address.json"
 export default function Home() {
 	const [success, setSuccess] = useState('');
 	const [error, setError] = useState("")
@@ -26,8 +27,8 @@ export default function Home() {
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
 		if (type == 0) {
-			const orgAddress = "0x59F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
-			const OrgContract = new ethers.Contract(orgAddress, orgABI.abi, provider);
+
+			const OrgContract = new ethers.Contract(addresses.OrganizationContractAddress, orgABI.abi, provider);
 			const orgSinger = OrgContract.connect(signer);
 			await orgSinger.registerOrganization(name_, address_, uri_).then(() => {
 				OrgContract.on("NewOrganizatoinRegistered", (tokenId, registeredBy, name, event) => {
@@ -47,8 +48,7 @@ export default function Home() {
 
 		}
 		if (type == 1) {
-			const suppAddress = "0xbCF26943C0197d2eE0E5D05c716Be60cc2761508";
-			const suppContract = new ethers.Contract(suppAddress, suppABI.abi, provider);
+			const suppContract = new ethers.Contract(addresses.suppleirContractAddress, suppABI.abi, provider);
 			const suppSinger = suppContract.connect(signer);
 			await suppSinger.registerSuppleir(name_, address_, name_, name_, uri_).then(() => {
 				suppContract.on("NewSuppleirRegistered", (tokenId, owner, name, event) => {
@@ -65,8 +65,6 @@ export default function Home() {
 
 
 			}).catch(() => setError("Registaration Failed"))
-
-
 
 		}
 	}

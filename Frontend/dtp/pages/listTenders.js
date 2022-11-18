@@ -5,15 +5,15 @@ import { useRouter } from 'next/router'
 import styles from "../styles/listTender.module.css";
 import { VerifyCalldata } from "../zkproofs/Verify/snarkjsVerify"
 import Header from "./Components/header";
+import addresses from "../address.json"
 export default function listTenders() {
-	const tenderContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555"
 	const [tenders, setTenders] = useState([])
 	const router = useRouter()
 	const getTenders = async () => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
 		const signer = provider.getSigner()
-		const tenderContract = new ethers.Contract(tenderContractAddress, tenderABI.abi, provider);
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 		const tenders = await tenderSinger.getAllTenders();
 		setTenders(tenders);
@@ -24,12 +24,6 @@ export default function listTenders() {
 
 	}, [])
 
-
-	const bid = async () => {
-		let proof = await VerifyCalldata(1, 2, 3, 5);
-		console.log(proof);
-
-	}
 	const handleClick = (e) => {
 		e.preventDefault();
 		router.push("/bid")
