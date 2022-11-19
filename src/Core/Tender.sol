@@ -13,8 +13,7 @@ import "forge-std/console.sol";
 
 contract Tenders {
     enum Stages {
-        bidding, // is when bidding is possible
-        verifying, // is when bidding finished and bidder can verify his proof
+        open, // is when bidding finished and bidder can verify his proof
         closed // is when proposal closed
     }
 
@@ -28,11 +27,12 @@ contract Tenders {
     struct Tender {
         uint256 organizationId;
         string tenderURI;
+        uint256 Id;
         Stages stage; // The stage of the tender
         uint256 bidStartTime; //The time where bidding started;
         uint256 bidEndTime; // The time where bidding ends
         uint256 verifyingTime; // the duration where bidders verify there proofs
-        uint256 winnerId; // The Id of the winner
+        Winner winner; // The Id of the winner
         bool isPaused; //Is true if the tender owner paused the tender
     }
     //Suppleir bid information
@@ -58,7 +58,6 @@ contract Tenders {
     mapping(uint256 => Tender) private tenders; // tenderId -> Tender
     mapping(uint256 => mapping(uint256 => Bid)) private bidding; // tenderId -> tokenId -> Bid
     mapping(uint256 => uint256[]) private biddersId; // tenderId -> bidders(suppliers) Id
-    mapping(uint256 => Winner) private winner; // tenderId -> Winner
     mapping(uint256 => uint256[]) private suppBid; // mapping that stores Ids of all tenders that suppleir can bids
     mapping(uint256 => mapping(address => bool)) private isBidded;
     /**
@@ -139,18 +138,19 @@ contract Tenders {
         payable
     {
         isAllowed_(1, orgId_);
-        require(msg.value == 0.5 ether, " 0.5 ether platform fee");
+        require(msg.value == 0.0000000005 ether, "0.0000000005 ether platform fee");
         tenderId++;
-        uint256 bidEnd_ = (bidPeriod * 1 days) + block.timestamp;
-        uint256 verifyingEndDate_ = bidEnd_ + verifyingPeriod * 1 days;
+        uint256 bidEnd_ = (bidPeriod * 1 minutes) + block.timestamp;
+        uint256 verifyingEndDate_ = bidEnd_ + verifyingPeriod * 1 minutes;
         tenders[tenderId] = Tender({
             organizationId: orgId_,
             tenderURI: tenderURI_,
-            stage: Stages.bidding,
+            Id: tenderId,
+            stage: Stages.open,
             bidStartTime: block.timestamp,
             bidEndTime: bidEnd_,
             verifyingTime: verifyingEndDate_,
-            winnerId: 0,
+            winner: Winner(0, 0),
             isPaused: false
         });
 
@@ -172,8 +172,9 @@ contract Tenders {
         isAllowed_(0, suppleirId_);
         address suppleirOwner = supp.ownerOf(suppleirId_);
         require(!isBidded[tenderId_][suppleirOwner], "You already bidded on this tender");
-        require(msg.value == 0.5 ether, "0.5 ether platform fee");
+        require(msg.value == 0.0000000005 ether, "0.0000000005 ether platform fee");
         Tender memory tender_ = tenders[tenderId_];
+        require(tender_.stage == Stages.open, "Tender already closed");
         uint256 endDate = tender_.bidEndTime;
         require(block.timestamp < endDate, "Bidding period finished");
         require(!tender_.isPaused, "Tender paused!");
@@ -201,10 +202,11 @@ contract Tenders {
         Tender memory tender_ = tenders[tenderId_];
         uint256 tenderOwner_ = tender_.organizationId;
         isAllowed_(1, tenderOwner_);
-        console.log(tender_.bidEndTime, "bid end time");
-        console.log(block.timestamp > tender_.bidEndTime);
-        require(tender_.bidEndTime < block.timestamp, "bidding stage");
-        require(tender_.stage != Stages.closed, "bidding closed");
+        require(!tender_.isPaused, "Tender paused!");
+        require(tender_.stage == Stages.open, "Tender closed");
+
+        require(tender_.bidEndTime >= block.timestamp, "verifying period");
+
         bidding[tenderId_][suppleirId_].status = status_;
 
         emit BidStatusChanged(tenderId_, suppleirId_, status_);
@@ -228,20 +230,20 @@ contract Tenders {
         uint256 bidValue_ = uint256(input[3]);
 
         Bid storage bid_ = bidding[tenderId_][suppleirId_];
-        require(
-            tenders[tenderId_].verifyingTime > block.timestamp && block.timestamp > tenders[tenderId_].bidEndTime,
-            "Verifying period not started || passed "
-        );
+        Tender storage tender_ = tenders[tenderId_];
+        require(!tender_.isPaused, "Tender paused!");
+        require(tender_.stage == Stages.open, "Tender closed");
+        require(block.timestamp > tender_.bidEndTime, "Verifying period not started ");
 
         require(bid_.proof == input[0], "Proof not same");
         require(bid_.status == Status(1), "bid declined");
 
         bid_.value = bidValue_;
 
-        if (winner[tenderId_].winningValue == 0) {
-            winner[tenderId_] = Winner(suppleirId_, bidValue_);
-        } else if (winner[tenderId_].winningValue > 0 && winner[tenderId_].winningValue > bidValue_) {
-            winner[tenderId_] = Winner(suppleirId_, bidValue_);
+        if (tender_.winner.winningValue == 0) {
+            tender_.winner = Winner(suppleirId_, bidValue_);
+        } else if (tender_.winner.winningValue > 0 && tender_.winner.winningValue > bidValue_) {
+            tender_.winner = Winner(suppleirId_, bidValue_);
         }
 
         emit BidVerified(tenderId_, suppleirId_);
@@ -260,10 +262,9 @@ contract Tenders {
         require(tender_.stage != Stages.closed, "Winner already announced");
         tender_.stage = Stages.closed;
 
-        Winner memory winner_ = winner[tenderId_];
-        bidding[tenderId_][winner_.suppleirId].claimable = false;
-
-        emit WinnerAnnounced(tenderId_, winner_.suppleirId, winner_.winningValue);
+        bidding[tenderId_][tender_.winner.suppleirId].claimable = false;
+        console.log(tender_.winner.suppleirId);
+        emit WinnerAnnounced(tenderId_, tender_.winner.suppleirId, tender_.winner.winningValue);
     }
 
     /**
@@ -309,14 +310,14 @@ contract Tenders {
         isAllowed_(0, suppleirId_); // check if the msg sender is a supplier or have allowance to claim a funds
         Tender memory tender_ = tenders[tenderId_];
 
-        require(tender_.stage == Stages(2), "Tender not closed");
+        require(tender_.stage == Stages.closed, "Tender not closed");
         Bid storage bid_ = bidding[tenderId_][suppleirId_];
 
         // require(bid_.proof != bytes32(0x0), "Bid not found");
         require(bid_.claimable, "Winner or already fund returned");
 
         bid_.claimable = false;
-        (bool success,) = msg.sender.call{value: 0.05 ether}("");
+        (bool success,) = msg.sender.call{value: 0.0000000005 ether}("");
         require(success, "fund return failed");
 
         emit FundReturned(tenderId_, suppleirId_);
@@ -327,7 +328,7 @@ contract Tenders {
 
     function getWinner(uint256 tenderId_) external view isTenderAvailable(tenderId_) returns (Winner memory) {
         require(tenders[tenderId_].stage == Stages.closed, "Winner not announced");
-        return winner[tenderId_];
+        return tenders[tenderId_].winner;
     }
     /**
      * @notice Used to get the bidders Id for a particular tender
