@@ -49,6 +49,9 @@ contract Tenders {
         uint256 winningValue;
     }
 
+    uint256 postPlatformFee; //Platform fee payed by Tender Poster
+    uint256 bidPlatformFee; //Platform fee payed by Bidder
+    uint256 profit; //Total profit the platform collects
     uint256 tenderId;
     address owner; // deployer address
 
@@ -118,11 +121,18 @@ contract Tenders {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(msg.sender == owner, "Only called by owner");
+        _;
+    }
+
     constructor(address organizationAddress_, address suppleirAddress_, address verifierAddress_) {
         Org = IERC721(organizationAddress_);
         supp = IERC721(suppleirAddress_);
         verifier = IVerifier(verifierAddress_);
         owner = msg.sender;
+        bidPlatformFee = 0.0000000005 ether;
+        postPlatformFee = 0.0000000005 ether;
     }
     /**
      * @notice Add's new tender to the contract
@@ -138,7 +148,7 @@ contract Tenders {
         payable
     {
         isAllowed_(1, orgId_);
-        require(msg.value == 0.0000000005 ether, "0.0000000005 ether platform fee");
+        require(msg.value == postPlatformFee, "fee != postPlatformFee");
         tenderId++;
         uint256 bidEnd_ = (bidPeriod * 1 minutes) + block.timestamp;
         uint256 verifyingEndDate_ = bidEnd_ + verifyingPeriod * 1 minutes;
@@ -172,7 +182,7 @@ contract Tenders {
         isAllowed_(0, suppleirId_);
         address suppleirOwner = supp.ownerOf(suppleirId_);
         require(!isBidded[tenderId_][suppleirOwner], "You already bidded on this tender");
-        require(msg.value == 0.0000000005 ether, "0.0000000005 ether platform fee");
+        require(msg.value == bidPlatformFee, "fee != bidPlatformFee");
         Tender memory tender_ = tenders[tenderId_];
         require(tender_.stage == Stages.open, "Tender already closed");
         uint256 endDate = tender_.bidEndTime;
@@ -263,7 +273,7 @@ contract Tenders {
         tender_.stage = Stages.closed;
 
         bidding[tenderId_][tender_.winner.suppleirId].claimable = false;
-        console.log(tender_.winner.suppleirId);
+        profit += (bidPlatformFee + postPlatformFee);
         emit WinnerAnnounced(tenderId_, tender_.winner.suppleirId, tender_.winner.winningValue);
     }
 
@@ -323,9 +333,34 @@ contract Tenders {
         emit FundReturned(tenderId_, suppleirId_);
     }
     /**
-     * @notice Used to get the winner for a particular tender
+     * @notice Withdraws profit from the platform
+     * @dev only called by the admin
+     * @param amount The number needed to withdraw
      */
 
+    function withdrawProfit(uint256 amount) external onlyAdmin {
+        require(profit >= amount, "Not enough profit");
+        unchecked {
+            profit -= amount;
+        }
+
+        (bool success,) = owner.call{value: amount}("");
+        require(success, "withdraw failed!");
+    }
+
+    /**
+     * @notice Update the platforms fee
+     * @dev only called by the admin
+     * @param type_ The type of platform fee we want to update. 0 for bidPlatform Fee or 1 for postPlatformfee
+     */
+    function updatePlatformFee(uint8 type_, uint256 fee) external onlyAdmin {
+        require(type_ == 0 || type_ == 1, "O for bid fee || 1 for post fee");
+        type_ == 0 ? bidPlatformFee = fee : postPlatformFee = fee;
+    }
+
+    /**
+     * @notice Used to get the winner for a particular tender
+     */
     function getWinner(uint256 tenderId_) external view isTenderAvailable(tenderId_) returns (Winner memory) {
         require(tenders[tenderId_].stage == Stages.closed, "Winner not announced");
         return tenders[tenderId_].winner;
