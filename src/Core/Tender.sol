@@ -34,6 +34,7 @@ contract Tenders {
         uint256 verifyingTime; // the duration where bidders verify there proofs
         Winner winner; // The Id of the winner
         bool isPaused; //Is true if the tender owner paused the tender
+        uint256 fee; //Fee payed to post create the tender
     }
     //Suppleir bid information
 
@@ -42,6 +43,7 @@ contract Tenders {
         uint256 value;
         Status status;
         bool claimable;
+        uint256 fee; //fee paid to bid
     }
 
     struct Winner {
@@ -161,7 +163,8 @@ contract Tenders {
             bidEndTime: bidEnd_,
             verifyingTime: verifyingEndDate_,
             winner: Winner(0, 0),
-            isPaused: false
+            isPaused: false,
+            fee: postPlatformFee
         });
 
         emit NewTenderCreated(orgId_, tenderId, bidEnd_, verifyingEndDate_);
@@ -189,7 +192,8 @@ contract Tenders {
         require(block.timestamp < endDate, "Bidding period finished");
         require(!tender_.isPaused, "Tender paused!");
         isBidded[tenderId_][suppleirOwner] = true;
-        bidding[tenderId][suppleirId_] = Bid({proof: proof_, value: 0, status: Status.pending, claimable: true});
+        bidding[tenderId][suppleirId_] =
+            Bid({proof: proof_, value: 0, status: Status.pending, claimable: true, fee: bidPlatformFee});
 
         biddersId[tenderId].push(suppleirId_);
         suppBid[suppleirId_].push(tenderId);
@@ -211,13 +215,13 @@ contract Tenders {
     {
         Tender memory tender_ = tenders[tenderId_];
         uint256 tenderOwner_ = tender_.organizationId;
+        Bid storage bid_ = bidding[tenderId_][suppleirId_];
         isAllowed_(1, tenderOwner_);
         require(!tender_.isPaused, "Tender paused!");
         require(tender_.stage == Stages.open, "Tender closed");
-
         require(tender_.bidEndTime >= block.timestamp, "verifying period");
 
-        bidding[tenderId_][suppleirId_].status = status_;
+        bid_.status = status_;
 
         emit BidStatusChanged(tenderId_, suppleirId_, status_);
     }
@@ -244,9 +248,9 @@ contract Tenders {
         require(!tender_.isPaused, "Tender paused!");
         require(tender_.stage == Stages.open, "Tender closed");
         require(block.timestamp > tender_.bidEndTime, "Verifying period not started ");
-
         require(bid_.proof == input[0], "Proof not same");
         require(bid_.status == Status(1), "bid declined");
+        require(bid_.value == 0, "Already Verified");
 
         bid_.value = bidValue_;
 
@@ -271,9 +275,9 @@ contract Tenders {
         require(block.timestamp > tender_.verifyingTime, "Verifying period not ended");
         require(tender_.stage != Stages.closed, "Winner already announced");
         tender_.stage = Stages.closed;
-
-        bidding[tenderId_][tender_.winner.suppleirId].claimable = false;
-        profit += (bidPlatformFee + postPlatformFee);
+        Bid storage bid_ = bidding[tenderId_][tender_.winner.suppleirId];
+        bid_.claimable = false;
+        profit += (bid_.fee + tender_.fee);
         emit WinnerAnnounced(tenderId_, tender_.winner.suppleirId, tender_.winner.winningValue);
     }
 
@@ -327,7 +331,7 @@ contract Tenders {
         require(bid_.claimable, "Winner or already fund returned");
 
         bid_.claimable = false;
-        (bool success,) = msg.sender.call{value: 0.0000000005 ether}("");
+        (bool success,) = msg.sender.call{value: bidPlatformFee}("");
         require(success, "fund return failed");
 
         emit FundReturned(tenderId_, suppleirId_);
@@ -365,6 +369,7 @@ contract Tenders {
         require(tenders[tenderId_].stage == Stages.closed, "Winner not announced");
         return tenders[tenderId_].winner;
     }
+
     /**
      * @notice Used to get the bidders Id for a particular tender
      * @param tenderId_ The Id of a tender
