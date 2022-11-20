@@ -295,6 +295,11 @@ contract TestTender is Test {
         assertEq(bid.proof, 0x230e96647ed00dad303895ddee3e808817f024a88604081a6c316c5095624cb3);
         assertEq(bid.value, 200000);
         assertEq(bid.claimable, false);
+        vm.stopPrank();
+        startHoax(address(30));
+
+        tender.announceWinner(1);
+        vm.stopPrank();
     }
 
     function testFailAnnounceWinner() public {

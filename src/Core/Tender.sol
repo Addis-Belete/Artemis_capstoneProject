@@ -273,7 +273,7 @@ contract Tenders {
         uint256 tenderOwner_ = tender_.organizationId;
         isAllowed_(1, tenderOwner_);
         require(block.timestamp > tender_.verifyingTime, "Verifying period not ended");
-        require(tender_.stage != Stages.closed, "Winner already announced");
+        require(tender_.stage == Stages.open, "Winner already announced");
         tender_.stage = Stages.closed;
         Bid storage bid_ = bidding[tenderId_][tender_.winner.suppleirId];
         bid_.claimable = false;
