@@ -1,20 +1,9 @@
 import Link from "next/link"
 import styles from "../../styles/header.module.css"
-import { useState } from "react";
 import { ethers } from "ethers";
 import { useRouter } from 'next/router';
-export default () => {
-	const [provider, setProvider] = useState("");
+export default ({ provider = "ad" }) => {
 	const router = useRouter();
-	const connect = () => {
-		if (provider == "") {
-			const provider = new ethers.providers.Web3Provider(window.ethereum)
-			setProvider(provider);
-		}
-		else {
-			setProvider("");
-		}
-	}
 
 	return (
 		<header className={styles.header}>
@@ -72,7 +61,7 @@ export default () => {
 				</li>
 
 			</ul>
-			<button className={styles.button} onClick={() => connect()} >{provider == "" ? "Connect" : "Disconnect"}</button>
+			<button className={styles.button} >{provider == "" ? "Not connected" : "Connected"}</button>
 
 		</header >
 	)

@@ -6,8 +6,9 @@ import { ethers } from "ethers"
 export default function myTenderComponent({ tender }) {
 	const [bidders, setBidders] = useState([]);
 	const [disp, setDisp] = useState(false);
-	const [success, setSuccess] = useState('');
-	const [error, setError] = useState('');
+	const [success, setSuccess] = useState("");
+	const [error, setError] = useState("")
+
 	const getBidders = async (tenderId) => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		await provider.send("eth_requestAccounts", []);
@@ -35,10 +36,13 @@ export default function myTenderComponent({ tender }) {
 		await tenderSinger.approveOrDeclineBid(tenderId, suppleirId, status).then(() => {
 			tenderContract.on("BidStatusChanged", (tenderId, suppleirId, status) => {
 				console.log(`Bid id ${suppleirId} is ${status}`)
+				const message = `Bid id ${suppleirId} is ${status == 1 ? "Approved" : "Declined"}`
+				setSuccess(message)
 			})
-		}).catch(err => console.log(err))
+		}).catch(() => setError("Transaction Failed!"))
 
 	}
+
 
 	const announceWinner = async (tenderId) => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -56,24 +60,28 @@ export default function myTenderComponent({ tender }) {
 		}).catch(() => setError("Transaction failed"))
 
 	}
-	console.log(bidders, "bidders")
+
 	return (
 
 		<div >
+			{success ? <p className={styles.success}>{success}</p> : <p className={styles.error}>{error}</p>}
 			<ul className={styles.ul}>
 				<li className={styles.li} >{`tenderId: ${(tender.Id).toString()}`}</li><br></br>
 				<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
 				<button className={styles.button} onClick={() => handleClick((tender.Id).toString())}>{disp ? "Hide Bids" : "Show Bids"}</button>
-				{(tender.winnerId).toString() == "0" ? <button className={styles.button} onClick={() => announceWinner(tender.organizationId)}>Announce Winner</button> : <button className={styles.button}>Winner Announced</button>}
+				{(tender.stage).toString() == 0 ? <button className={styles.button} onClick={() => announceWinner(tender.Id)}>Announce Winner</button> : <button className={styles.button}>Winner Announced</button>}
 			</ul>
+
 			{disp && bidders.map((bidId, index) => {
+
 				return (
 					<ul key={index} className={styles.ul1} >
 						<li className={styles.li} >{`Suppleir Id: ${(bidId).toString()} `}</li><br></br>
 						<li className={styles.li}>{`Suppleir URI: www.awash.com`}</li><br></br>
 						<button className={styles.buttonC} onClick={() => approveOrDeclineBid((tender.Id).toString(), bidId.toString(), 1)}>Approve</button>
-						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(2, bidId.toString(), 2)}>Decline</button>
+						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(tender.Id, bidId.toString(), 2)}>Decline</button>
 					</ul>
+
 				)
 
 			})}

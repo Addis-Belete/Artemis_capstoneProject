@@ -43,15 +43,14 @@
 	padding: 5px;
 }
 
-.success{
 
-
-}
-.error{
-color: red;
+.error {
+  color: red;
+  text-align: center;
 }
 
-.success{
-color: green;
+.success {
+  color: green;
+  text-align: center;
 }
 

@@ -28,11 +28,18 @@ export default function myBid() {
 		);
 		const suppSigner = suppContract.connect(signer);
 		const tenderSigner = tenderContract.connect(signer);
+		let suppId_;
+		await suppSigner.getYourId().then(res => {
+			suppId_ = res.toString()
+			setSuppId(suppId_);
 
-		const suppId_ = await suppSigner.getYourId();
-		setSuppId(suppId_.toString());
 
-		const myBids = await tenderSigner.getAllYourBids(suppId_.toString());
+		}).catch(err => console.log(err));
+
+		await tenderSigner.getAllYourBids(suppId_).then((res) => {
+			setMyBid(res)
+			console.log(res);
+		}).catch(err => console.log(err));
 		/*
 					myBids.map(async (val, ind) => {
 						let bidObj = {
@@ -47,13 +54,13 @@ export default function myBid() {
 						bidsArray[ind] = bidObj;
 					})
 			*/
-		setMyBid(myBids);
+
 	};
 
 	useEffect(() => {
 		getMyBids();
 	}, []);
-	console.log(myBids);
+
 	return (
 		<div>
 			<Header />

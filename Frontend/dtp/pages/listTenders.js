@@ -8,20 +8,32 @@ import addresses from "../address.json"
 export default function listTenders() {
 	const [tenders, setTenders] = useState([])
 	const router = useRouter()
+
+
+
 	const getTenders = async () => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
-		await provider.send("eth_requestAccounts", []);
-		const signer = provider.getSigner()
+		const accounts = await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner();
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider);
 		const tenderSinger = tenderContract.connect(signer);
 
-		const tenders = await tenderSinger.getAllTenders() || [];
-		setTenders(tenders);
+		await tenderSinger.getAllTenders().then((res) => {
+			const tenders_ = res.filter(function (tender) {
+				console.log(tender);
+				return (tender.stage).toString() == 0;
+
+			});
+			setTenders(tenders_);
+		})
+			.catch((err) => console.log(err));;
+
 
 	}
 
 	useEffect(() => {
 		getTenders()
+
 
 	}, [])
 

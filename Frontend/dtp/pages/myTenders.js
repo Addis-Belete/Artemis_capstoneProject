@@ -34,7 +34,7 @@ export default function listTenders() {
 			.then((res) => (orgId = res.toString()))
 			.catch((err) => console.log(err));
 		const tend = await tenderSinger.getAllTenders();
-		const myTender = tend.filter(function (tender, index) {
+		const myTender = tend.filter(function (tender) {
 			return tender.organizationId.toString() == orgId;
 		});
 		setMyTenders(myTender);

@@ -13,6 +13,8 @@ export default function bid() {
 		"bidValue": ""
 
 	})
+	const [success, setSuccess] = useState('');
+	const [error, setError] = useState('');
 	const handleOnChange = event => {
 		const { name, value } = event.target;
 		setBids({ ...bids, [name]: value });
@@ -33,22 +35,22 @@ export default function bid() {
 				"bidValue": ""
 			})
 			tenderContract.on("NewBidAdded", (tenderId, suppleirId, event) => {
-				console.log(`Suppleir of Id ${suppleirId} bids to tender of Id ${tenderId}`)
+				const message = `Suppleir of Id ${suppleirId} bids to tender of Id ${tenderId}`
+				setSuccess(message);
 
 			})
 
-		}).catch(err => console.log(err));
+		}).catch(() => setError("Bidding Failed!"));
 
 
 	}
 
-	console.log(bids.tenderId, "Proof tenderId");
-	console.log(bids.suppleirId, "Proof suppleirID")
 	return (
 		<>
 			<Header />
-			<div className={styles.register}>
 
+			<div className={styles.register}>
+				{success ? <p className={styles.success}>{success}</p> : <p className={styles.error}>{error}</p>}
 				<label htmlFor="tenderId"> tender ID</label>
 				<input className={styles.input} type="text" value={bids.tenderId} name="tenderId" onChange={handleOnChange} />
 				<br />

@@ -8,6 +8,7 @@ export default function VerifyComponent({ bid, suppId }) {
 
 
 	const [disp, setDisp] = useState(false);
+	const [claimable, setClaimable] = useState(false);
 	const [winner, setWinner] = useState(false);
 	const [verified, setVerified] = useState({
 		"secretKey": "",
@@ -16,6 +17,7 @@ export default function VerifyComponent({ bid, suppId }) {
 	})
 	const [success, setSuccess] = useState('');
 	const [error, setError] = useState("");
+	const [uri, setURI] = useState('');
 	const handleClick = (e) => {
 		e.preventDefault();
 		setDisp(!disp);
@@ -53,8 +55,30 @@ export default function VerifyComponent({ bid, suppId }) {
 		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
 		const tenderSigner = tenderContract.connect(signer);
 		await tenderSigner.getYourBid(bid, suppId).then((res) => {
-			setWinner(res.claimable)
+			setClaimable(res.claimable)
+
 		})
+	}
+
+	const ifWinner = async () => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.getTender(bid).then((res) => {
+
+			const winnerId = (res.winner.suppleirId).toString()
+			const stage = (res.stage).toString();
+			if (winnerId == suppId && stage == 1) {
+				setWinner(true);
+
+			}
+
+		}).catch(err => console.log(err))
+
+
+
 	}
 	const claimFund = async (tenderId, suppleirId) => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -73,9 +97,28 @@ export default function VerifyComponent({ bid, suppId }) {
 		}).catch(() => setError("Fund Transfer Failed!"))
 
 	}
+	const getURI = async (tenderId) => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		const tenderContract = new ethers.Contract(addresses.tenderContractAddress, tenderABI.abi, provider)
+		const tenderSigner = tenderContract.connect(signer);
+		await tenderSigner.getTender(tenderId).then(res => setURI(res.tenderURI)).catch(err => console.log(err));
+
+	}
+
+	const won = (winner) => {
+		if (winner == true) {
+			return "Your Winner"
+		} else {
+			return "Claimed"
+		}
+	}
 
 	useEffect(() => {
 		checkIfCliamable()
+		ifWinner()
+		getURI(bid)
 	}, []);
 
 	return (
@@ -84,10 +127,10 @@ export default function VerifyComponent({ bid, suppId }) {
 			{success ? <p className={styles.success}>{success}</p> : <p className={styles.error}>{error}</p>}
 			<ul className={styles.ul}  >
 				<li>{`tenderId : ${bid}`}</li>
-				<li>{`tender URI : ${bid.tenderURI}`}</li>
+				<li>{`tender URI : ${uri}`}</li>
 				<button className={styles.button} onClick={handleClick} >Verify</button>
-				{winner == true ?
-					<button className={styles.button} onClick={() => claimFund(bid, suppId)}>Claim Fund</button> : <button className={styles.button}>Your Winner</button>}
+				{claimable == true ?
+					<button className={styles.button} onClick={() => claimFund(bid, suppId)}>Claim Fund</button> : <button className={styles.button}>{won(winner)}</button>}
 			</ul>
 			{disp &&
 				<div className={styles.div} >
