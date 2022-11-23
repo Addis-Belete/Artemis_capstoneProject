@@ -24,10 +24,12 @@ contract TestTender is Test {
     event TenderStatus(uint256 indexed tenderId, bool isPaused);
 
     function setUp() public {
+        vm.startPrank(address(50));
         supp = new Suppleirs();
         org = new Organizations();
         verifier = new Verifier();
         tender = new Tenders(address(org), address(supp), address(verifier));
+        vm.stopPrank();
     }
 
     function testCreateTender() public {
@@ -50,29 +52,22 @@ contract TestTender is Test {
     function testFailCreateTender() public {
         createOrg();
         hoax(address(30));
+        vm.expectRevert("fee != postPlatformFee");
         tender.createNewTender{value: 0.0000000005 ether}(2, "www.tender1.com", 5, 2);
-        vm.expectRevert("Not allowed for you!");
     }
 
     function testFailCreateTender1() public {
         createOrg();
         hoax(address(30));
-        tender.createNewTender{value: 0.0000000005 ether}(3, "www.tender1.com", 5, 2);
         vm.expectRevert("invalid token ID");
+        tender.createNewTender{value: 0.0000000005 ether}(3, "www.tender1.com", 5, 2);
     }
 
     function testFailCreateTender2() public {
         createOrg();
         hoax(address(30));
-        tender.createNewTender{value: 0.2 ether}(1, "www.tender1.com", 5, 2);
         vm.expectRevert(" 0.0000000005 ether platform fee");
-    }
-
-    function testFailCreateTender3() public {
-        createOrg();
-        hoax(address(40));
-        tender.createNewTender{value: 0.0000000005 ether}(1, "www.tender1.com", 5, 2);
-        vm.expectRevert("Not allowed for you!");
+        tender.createNewTender{value: 0.2 ether}(1, "www.tender1.com", 5, 2);
     }
 
     function testBid() public {
@@ -102,8 +97,8 @@ contract TestTender is Test {
         tender.createNewTender{value: 0.0000000005 ether}(1, "www.tender1.com", 5, 2);
         vm.stopPrank();
         startHoax(address(10));
+        vm.expectRevert("Bidding period finished' != 'Bidding closed or paused");
         tender.bid{value: 0.0000000005 ether}(1, 2, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
-        vm.expectRevert("tender not found");
     }
 
     function testFailBid1() public {
@@ -113,8 +108,8 @@ contract TestTender is Test {
         tender.createNewTender{value: 0.0000000005 ether}(1, "www.tender1.com", 5, 2);
         vm.stopPrank();
         startHoax(address(20));
-        tender.bid{value: 0.0000000005 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
         vm.expectRevert("is not allowed for you!");
+        tender.bid{value: 0.0000000005 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
     }
 
     function testFailBid2() public {
@@ -124,8 +119,8 @@ contract TestTender is Test {
         tender.createNewTender{value: 0.0000000005 ether}(1, "www.tender1.com", 5, 2);
         vm.stopPrank();
         startHoax(address(10));
-        tender.bid{value: 0.25 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
         vm.expectRevert("0.0000000005 ether platform fee");
+        tender.bid{value: 0.25 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
     }
 
     function testFailBid3() public {
@@ -137,9 +132,8 @@ contract TestTender is Test {
         startHoax(address(10));
         uint256 skip_ = 432002;
         skip(skip_);
-
-        tender.bid{value: 0.0000000005 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
         vm.expectRevert("Bidding closed or paused");
+        tender.bid{value: 0.0000000005 ether}(1, 1, 0x06a1ecbd07743fd48b1aa60d1dd8c086e3f907bd5a74b6e31ba339638af473a4);
     }
 
     function testApproveOrDeclineBid() public {
@@ -273,9 +267,9 @@ contract TestTender is Test {
             0x0000000000000000000000000000000000000000000000000000000000000001,
             0x0000000000000000000000000000000000000000000000000000000000030d40
         ];
-
-        tender.verifyBid(a, b, c, input);
         vm.expectRevert("Proof not valid");
+        tender.verifyBid(a, b, c, input);
+
         vm.stopPrank();
     }
 
@@ -295,10 +289,6 @@ contract TestTender is Test {
         assertEq(bid.proof, 0x230e96647ed00dad303895ddee3e808817f024a88604081a6c316c5095624cb3);
         assertEq(bid.value, 200000);
         assertEq(bid.claimable, false);
-        vm.stopPrank();
-        startHoax(address(30));
-
-        tender.announceWinner(1);
         vm.stopPrank();
     }
 
@@ -320,8 +310,9 @@ contract TestTender is Test {
 
         startHoax(address(30));
         tender.announceWinner(1);
-        tender.announceWinner(1);
         vm.expectRevert("Winner already announceds");
+        tender.announceWinner(1);
+
         vm.stopPrank();
     }
 
@@ -346,7 +337,6 @@ contract TestTender is Test {
         vm.stopPrank();
         vm.startPrank(address(10));
         tender.pauseTender(1);
-        vm.expectRevert("Not allowed for you!");
         vm.stopPrank();
     }
 
@@ -372,7 +362,6 @@ contract TestTender is Test {
         uint256 time = 5 days;
         skip(time);
         tender.restartTender(1, 5, 2);
-        vm.expectRevert("Tender not paused");
     }
 
     function testReturnFunds() public {
@@ -385,6 +374,23 @@ contract TestTender is Test {
 
         tender.createNewTender{value: 0.0000000005 ether}(1, "www.tender1.com", 5, 2);
         tender.getAllTenders();
+    }
+
+    function testWithdrawProfit() public {
+        testAnnounceWinner();
+        vm.startPrank(address(50));
+        uint256 profit = tender.getProfitGenerated();
+        tender.withdrawProfit(profit);
+        uint256 balance = address(50).balance;
+        assertEq(balance, profit);
+    }
+
+    function testFailWithdrawProfit() public {
+        testAnnounceWinner();
+        vm.startPrank(address(20));
+        vm.expectRevert("Only called by owner");
+        uint256 profit = tender.getProfitGenerated();
+        tender.withdrawProfit(profit);
     }
 
     function createOrg() internal {

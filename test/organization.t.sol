@@ -105,4 +105,21 @@ contract TestOrganization is Test {
         organizations.removeOrganization(2);
         vm.expectRevert("Not Registered");
     }
+
+    function testGetYourOrganiationId() public {
+        vm.startPrank(address(20));
+        organizations.registerOrganization("Awash Bank", "Addis Ababa", "www.ipfs.com");
+
+        uint256 id = organizations.getYourOrganiationId();
+        assertEq(id, 1);
+    }
+
+    function testFailGetYourOrganiationId() public {
+        vm.startPrank(address(20));
+        organizations.registerOrganization("Awash Bank", "Addis Ababa", "www.ipfs.com");
+        vm.stopPrank();
+        vm.startPrank(address(10));
+        organizations.getYourOrganiationId();
+        vm.expectRevert("This address not registered");
+    }
 }
