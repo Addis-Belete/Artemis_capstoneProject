@@ -106,4 +106,21 @@ contract TestSuppleir is Test {
 
         vm.expectRevert("Not found");
     }
+
+    function testGetYourId() public {
+        vm.startPrank(address(20));
+        suppleirs.registerSuppleir("Donsa", "Addis Ababa", "Addis", "Electronics", "www.suppleir.com");
+        uint256 id = suppleirs.getYourId();
+        assertEq(id, 1);
+    }
+
+    function testFailGetYourId() public {
+        vm.startPrank(address(20));
+        suppleirs.registerSuppleir("Donsa", "Addis Ababa", "Addis", "Electronics", "www.suppleir.com");
+        vm.stopPrank();
+        vm.startPrank(address(10));
+        suppleirs.getYourId();
+        vm.expectRevert();
+        vm.stopPrank();
+    }
 }

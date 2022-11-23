@@ -6,7 +6,7 @@ import "openzeppelin-contracts/interfaces/IERC721.sol";
 import "../Interfaces/IVerifier.sol";
 import "forge-std/console.sol";
 /**
- * @notice Is contract that makes org to create tender and
+ * @notice Is contract that contains a logic to create and bid to tender
  * @title Tenders contract
  * @author Addis Belete
  */
@@ -25,9 +25,9 @@ contract Tenders {
     }
 
     struct Tender {
-        uint256 organizationId;
-        string tenderURI;
-        uint256 Id;
+        uint256 organizationId; //The Id of the orginization who creates the tender
+        string tenderURI; //The URI of the tender
+        uint256 Id; // The Id of this tender
         Stages stage; // The stage of the tender
         uint256 bidStartTime; //The time where bidding started;
         uint256 bidEndTime; // The time where bidding ends
@@ -39,23 +39,23 @@ contract Tenders {
     //Suppleir bid information
 
     struct Bid {
-        uint256 proof;
-        uint256 value;
-        Status status;
-        bool claimable;
+        uint256 proof; //Proof of the bid
+        uint256 value; // The price/value of bid
+        Status status; // status of the bid
+        bool claimable; // true if claimable
         uint256 fee; //fee paid to bid
     }
 
     struct Winner {
-        uint256 suppleirId;
-        uint256 winningValue;
+        uint256 suppleirId; //The Id of the winner
+        uint256 winningValue; //The price at which the winner was won
     }
 
-    uint256 postPlatformFee; //Platform fee payed by Tender Poster
-    uint256 bidPlatformFee; //Platform fee payed by Bidder
-    uint256 profit; //Total profit the platform collects
-    uint256 tenderId;
-    address owner; // deployer address
+    uint256 public postPlatformFee; //Platform fee payed by Tender Poster
+    uint256 public bidPlatformFee; //Platform fee payed by Bidder
+    uint256 private profit; //Total profit the platform collects
+    uint256 internal tenderId;
+    address public owner; // deployer address
 
     IERC721 Org; // Interface for Organization contract
     IERC721 supp; // Interface for suppleir contract
@@ -117,6 +117,13 @@ contract Tenders {
      * @param isPaused true if paused else false
      */
     event TenderStatus(uint256 indexed tenderId, bool isPaused);
+
+    /**
+     * @notice Emitted when Platfrom fee updated
+     * @param type_ The type of fee updated bid or post platfrom fee
+     * @param fee The updated number of fee
+     */
+    event PlatformFeeUpdated(uint8 type_, uint256 fee);
 
     modifier isTenderAvailable(uint256 tenderId_) {
         require(tenderId_ > 0 && tenderId_ <= tenderId, "tender not found");
@@ -331,7 +338,7 @@ contract Tenders {
         require(bid_.claimable, "Winner or already fund returned");
 
         bid_.claimable = false;
-        (bool success,) = msg.sender.call{value: bidPlatformFee}("");
+        (bool success,) = msg.sender.call{value: bid_.fee}("");
         require(success, "fund return failed");
 
         emit FundReturned(tenderId_, suppleirId_);
@@ -360,11 +367,19 @@ contract Tenders {
     function updatePlatformFee(uint8 type_, uint256 fee) external onlyAdmin {
         require(type_ == 0 || type_ == 1, "O for bid fee || 1 for post fee");
         type_ == 0 ? bidPlatformFee = fee : postPlatformFee = fee;
+        emit PlatformFeeUpdated(type_, fee);
     }
 
     /**
+     * @notice Used to get the profit generated
+     */
+    function getProfitGenerated() external view onlyAdmin returns (uint256) {
+        return profit;
+    }
+    /**
      * @notice Used to get the winner for a particular tender
      */
+
     function getWinner(uint256 tenderId_) external view isTenderAvailable(tenderId_) returns (Winner memory) {
         require(tenders[tenderId_].stage == Stages.closed, "Winner not announced");
         return tenders[tenderId_].winner;
