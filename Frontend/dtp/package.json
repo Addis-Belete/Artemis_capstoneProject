@@ -1,0 +1,24 @@
+{
+  "name": "dtp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "ethers": "^5.7.2",
+    "next": "13.0.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "snarkjs": "^0.5.0"
+  },
+"browser": {
+  "fs": false,
+  "path": false,
+  "os": false,
+ "readline": false
+}
+}

@@ -2,5 +2,11 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
+gas_reports = ["*"]
+[rpc_endpoints]
+anvil = "${ANVIL_RPC_URL}"
+
+
+
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

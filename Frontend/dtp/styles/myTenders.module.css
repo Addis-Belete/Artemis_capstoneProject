@@ -1,0 +1,59 @@
+.ul {
+	display: flex;
+	align-items: center;
+	list-style: nones;
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	justify-content: space-around;
+	height: 40px;
+	border: 1px solid gray;
+	border-radius: 5px;
+}
+
+.li {
+	display: block;
+
+}
+
+.button {
+	padding: 5px;
+	width:130px
+
+}
+.buttonC {
+	padding: 5px;
+	width:80px
+
+}
+.ul1{
+	display: flex;
+	align-items: center;
+	list-style: nones;
+	width: 40%;
+	margin-left: auto;
+	margin-right: auto;
+	justify-content: space-around;
+	height: 40px;
+	border: 1px solid gray;
+	border-radius: 5px;
+
+}
+
+.p{
+text-align: center;
+margin-top: 200px;
+color: rgb(147, 68, 68);
+font-size: 30px;
+
+}
+
+.error {
+  color: red;
+  text-align: center;
+}
+
+.success {
+  color: green;
+  text-align: center;
+}
