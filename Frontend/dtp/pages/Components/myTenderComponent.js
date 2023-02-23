@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import tenderABI from "../../../../out/Tender.sol/Tenders.json";
 import addresses from "../../address.json"
 import { ethers } from "ethers"
-export default function myTenderComponent({ tender }) {
+export default function myTenderComponent({ tender = {Id: 0, tenderURI: "www"} }) {
 	const [bidders, setBidders] = useState([]);
 	const [disp, setDisp] = useState(false);
 	const [success, setSuccess] = useState("");
@@ -66,20 +66,20 @@ export default function myTenderComponent({ tender }) {
 		<div >
 			{success ? <p className={styles.success}>{success}</p> : <p className={styles.error}>{error}</p>}
 			<ul className={styles.ul}>
-				<li className={styles.li} >{`tenderId: ${(tender.Id).toString()}`}</li><br></br>
+				<li className={styles.li} >{`tenderId: ${(tender.Id)}`}</li><br></br>
 				<li className={styles.li}>{`tenderURI: ${tender.tenderURI}`}</li><br></br>
-				<button className={styles.button} onClick={() => handleClick((tender.Id).toString())}>{disp ? "Hide Bids" : "Show Bids"}</button>
-				{(tender.stage).toString() == 0 ? <button className={styles.button} onClick={() => announceWinner(tender.Id)}>Announce Winner</button> : <button className={styles.button}>Winner Announced</button>}
+				<button className={styles.button} onClick={() => handleClick((tender.Id))}>{disp ? "Hide Bids" : "Show Bids"}</button>
+				{(tender.stage) == 0 ? <button className={styles.button} onClick={() => announceWinner(tender.Id)}>Announce Winner</button> : <button className={styles.button}>Winner Announced</button>}
 			</ul>
 
 			{disp && bidders.map((bidId, index) => {
 
 				return (
 					<ul key={index} className={styles.ul1} >
-						<li className={styles.li} >{`Suppleir Id: ${(bidId).toString()} `}</li><br></br>
+						<li className={styles.li} >{`Suppleir Id: ${(bidId)} `}</li><br></br>
 						<li className={styles.li}>{`Suppleir URI: www.awash.com`}</li><br></br>
-						<button className={styles.buttonC} onClick={() => approveOrDeclineBid((tender.Id).toString(), bidId.toString(), 1)}>Approve</button>
-						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(tender.Id, bidId.toString(), 2)}>Decline</button>
+						<button className={styles.buttonC} onClick={() => approveOrDeclineBid((tender.Id), bidId, 1)}>Approve</button>
+						<button className={styles.buttonC} onClick={() => approveOrDeclineBid(tender.Id, bidId, 2)}>Decline</button>
 					</ul>
 
 				)
@@ -91,7 +91,3 @@ export default function myTenderComponent({ tender }) {
 
 }
 
-/**
-5184809407160212433912025853841891335343260389862739459919707061648978854415 --> bidproof
-4009655470960686692642744586773687939259979217415386626639754392851468581099
- */
