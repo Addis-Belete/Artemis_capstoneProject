@@ -1,7 +1,7 @@
 import styles from "../styles/Home.module.css";
 import { useState } from "react";
 import { ethers } from "ethers";
-import orgABI from "../../../out/organization.sol/Organizations.json"
+import orgABI from "../../../out/Organization.sol/Organizations.json"
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json"
 import Header from "./Components/header";
 import addresses from "../address.json"

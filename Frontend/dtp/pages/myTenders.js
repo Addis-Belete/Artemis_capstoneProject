@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import tenderABI from "../../../out/Tender.sol/Tenders.json";
-import orgABI from "../../../out/organization.sol/Organizations.json";
+import orgABI from "../../../out/Organization.sol/Organizations.json";
 import suppABI from "../../../out/Suppleir.sol/Suppleirs.json";
 import { useState, useEffect } from "react";
 import MyTenderComponent from "./Components/myTenderComponent";
