@@ -1,10 +1,18 @@
 import Link from "next/link"
 import styles from "../../styles/header.module.css"
 import { ethers } from "ethers";
-import { useRouter } from 'next/router';
+import { useRouter} from 'next/router';
+import { useState } from "react";
 export default ({ provider = "ad" }) => {
 	const router = useRouter();
+	const [activeAcc, setActiveAcc] = useState("")
+	const connect = async() => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner()
+		setActiveAcc(signer.address);
 
+	}
 	return (
 		<header className={styles.header}>
 			<h2 className={styles.h2}><Link href="/">Decentralized Tender Platfrom</Link></h2>
@@ -61,7 +69,7 @@ export default ({ provider = "ad" }) => {
 				</li>
 
 			</ul>
-			<button className={styles.button} >{provider == "" ? "Not connected" : "Connected"}</button>
+			<button className={styles.button} onClick={connect} >{activeAcc == "" ? "Connect" : "Connected"}</button>
 
 		</header >
 	)
